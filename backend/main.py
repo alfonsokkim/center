@@ -1,15 +1,15 @@
-from fastapi import FastAPI;
-from fastapi.middleware.cors import CORSMiddleware;
-from contextlib import asynccontextmanager;
-from routes import score, session, analytics;
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+from contextlib import asynccontextmanager
+from routes import score, session, analytics
+from db.database import init_db
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     print("Centre API is starting...")
-    # create DB connection
+    init_db()
     yield
     print("Centre API is shutting down...")
-    # close DB connection
 
 
 app = FastAPI(
@@ -19,6 +19,7 @@ app = FastAPI(
     lifespan=lifespan
 )
 
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"], # we need to insert our chrome extension when it gets created -> allow_origins=["chrome-extension://xxxxx"]
@@ -26,9 +27,11 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+
 app.include_router(score.router, prefix="/score")
 app.include_router(analytics.router, prefix="/analytics")
 app.include_router(session.router, prefix="/session")
+
 
 @app.get("/")
 async def root():
