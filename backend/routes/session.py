@@ -1,38 +1,36 @@
 from fastapi import APIRouter;
 from body_types.session_types import TabData, SessionStartData
+from backend.db.storage import *
+from backend.services.relevance import relevance_score_for_url
 router = APIRouter()
 
 @router.post("/start")
 async def start_session(sessionStart:SessionStartData):
-    #create_session(SessionStartData.goal)
-    
+    session = create_session(sessionStart.goal)
+    # store this session somewhere later
     return 200
 
 @router.post("/resume")
 async def resume_session(tabdata:TabData):
-    # duration
-    # logs duration paused
-
-    #update_session('pause', tabdata.duration)
+    update_session('pause', (0, tabdata.duration))
     return 200
 
 @router.post("/end")
 async def end_session():
-    # duration
-    # logs duration and calculates final score
     # storeSession()
     return None
 
 @router.get()
 async def get_stats():
     # get stats of current study session
-    # getEvents()
+    # get session id from session object retrieved in start_session
+    get_events()
     return None
 
 @router.post("/distraction")
-async def log_distraction():
+async def log_distraction(tabdata:TabData):
     # duration, url
-    # logs distraction
+    out = relevance_score_for_url(tabdata.url)#, get_goal)
     return None
     
 
