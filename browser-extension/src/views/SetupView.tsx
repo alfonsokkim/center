@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import type { SessionData } from '../types';
 import './SetupView.css'
-import { postUrl, sendSessionGoal } from '../Server';
+import { postSessionGoal } from '../server';
 
 interface SetupProps {
   onStart: (data: Omit<SessionData, 'status'>) => void;
@@ -30,11 +30,9 @@ export default function SetupView({ onStart }: SetupProps) {
   };
 
   const handleStart = async () => {
-    // 1. Get the current tab URL
     const [tabInfo] = await chrome.tabs.query({ active: true, currentWindow: true });
     const currentUrl = tabInfo?.url || "";
 
-    // 2. Define the sessionPayload object
     const sessionPayload: Omit<SessionData, 'status'> = {
       task: task.trim(),
       sessionType,
@@ -44,13 +42,16 @@ export default function SetupView({ onStart }: SetupProps) {
       url: currentUrl
     };
 
-    // 3. Send ONLY the url to /sessionstart via your server.ts helper
-    await postUrl(currentUrl);
+    // 1. Send the goal directly from React (Background doesn't need to know the goal)
+    await postSessionGoal(task.trim());
 
-    // 4. Send the task as the goal
-    await sendSessionGoal(task.trim());
+    // 2. Wake up the Background Script and tell it to start tracking!
+    chrome.runtime.sendMessage({ 
+      action: "START_SESSION", 
+      url: currentUrl 
+    });
 
-    // 5. Update the UI and save to local storage
+    // 3. Switch the UI to the active session view
     onStart(sessionPayload);
   };
 

@@ -9,16 +9,33 @@ interface BreakProps {
 export default function BreakView({ data, onUpdate }: BreakProps) {
   const [timeLeft, setTimeLeft] = useState(data.minutes * 60);
 
+  // 1. Create the resume handler to talk to the background script
+  const handleResume = async () => {
+    // Grab the tab the user is currently looking at
+    const [tabInfo] = await chrome.tabs.query({ active: true, currentWindow: true });
+    const currentUrl = tabInfo?.url || "";
+
+    // Tell the background script to wake up and start tracking this tab
+    chrome.runtime.sendMessage({ 
+      action: "RESUME_SESSION", 
+      url: currentUrl 
+    });
+
+    // Tell React to switch the UI back to the Session screen
+    onUpdate({ status: 'session' });
+  };
+
   useEffect(() => {
     if (timeLeft <= 0) {
-      onUpdate({ status: 'session' })
+      // 2. Call the new handler when the timer hits zero automatically
+      handleResume();
       return;
     }
     const interval = setInterval(() => {
       setTimeLeft((prev) => prev - 1);
     }, 1000);
     return () => clearInterval(interval);
-  }, [timeLeft]);
+  }, [timeLeft]); // Leaving handleResume out of deps for now to avoid re-triggering, but safe since it doesn't change
 
   const formatTime = (totalSeconds: number) => {
     const m = Math.floor(totalSeconds / 60);
@@ -34,7 +51,8 @@ export default function BreakView({ data, onUpdate }: BreakProps) {
           <p>Break Ends In:</p>
           <h1 className="timer-digits">{formatTime(timeLeft)}</h1>
         </div>
-        <button className="start-btn" onClick={() => onUpdate({ status: 'session' })}>
+        {/* 3. Attach the handler to the manual button */}
+        <button className="start-btn" onClick={handleResume}>
           Back to Work
         </button>
       </main>
