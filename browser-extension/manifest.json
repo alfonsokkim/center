@@ -1,0 +1,27 @@
+{
+  "manifest_version": 3,
+  "name": "Center",
+  "version": "1.0.0",
+  "description": "ADHD work tracker that predicts distraction patterns and enforces focus.",
+  "action": {
+    "default_popup": "index.html"
+  },
+  "background": {
+    "service_worker": "src/background.ts", 
+    "type": "module"
+  },
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["src/content.tsx"] 
+    }
+  ],
+  "permissions": [
+    "tabs",      
+    "storage",   
+    "scripting"  
+  ],
+  "host_permissions": [
+    "<all_urls>" 
+  ]
+}
