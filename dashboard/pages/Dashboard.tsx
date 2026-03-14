@@ -163,7 +163,7 @@ function createOrbitRings() {
 export default function Dashboard() {
   const [orbitProgress, setOrbitProgress] = useState(0)
   const [activePlanetId, setActivePlanetId] = useState<string | null>(null)
-  const orbitTargetRef = useRef(0)
+  const orbitVelocityRef = useRef(0)
 
   const dotStars = useMemo(
     () =>
@@ -195,13 +195,18 @@ export default function Dashboard() {
 
   useEffect(() => {
     let frameId = 0
+    let lastTime = 0
 
-    const animate = () => {
+    const animate = (time: number) => {
+      const deltaSeconds =
+        lastTime === 0 ? 1 / 60 : Math.min((time - lastTime) / 1000, 0.05)
+      lastTime = time
+
+      orbitVelocityRef.current *= Math.pow(0.22, deltaSeconds)
+
       setOrbitProgress((current) => {
-        const next = current + (orbitTargetRef.current - current) * 0.12
-        return Math.abs(orbitTargetRef.current - next) < 0.0001
-          ? orbitTargetRef.current
-          : next
+        const next = current + orbitVelocityRef.current * deltaSeconds
+        return Math.abs(orbitVelocityRef.current) < 0.0001 ? current : next
       })
 
       frameId = window.requestAnimationFrame(animate)
@@ -218,7 +223,13 @@ export default function Dashboard() {
     <main
       className="dashboard"
       onWheel={(event) => {
-        orbitTargetRef.current += event.deltaY * 0.0025
+        const velocityDelta = event.deltaY * 0.0011
+        const maxVelocity = 1.66
+
+        orbitVelocityRef.current = Math.max(
+          -maxVelocity,
+          Math.min(maxVelocity, orbitVelocityRef.current + velocityDelta)
+        )
       }}
     >
       <div className="dashboard__stars" aria-hidden="true">
