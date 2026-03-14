@@ -164,6 +164,7 @@ export default function Dashboard() {
   const [orbitProgress, setOrbitProgress] = useState(0)
   const [activePlanetId, setActivePlanetId] = useState<string | null>(null)
   const orbitVelocityRef = useRef(0)
+  const closeTimeoutRef = useRef<number | null>(null)
 
   const dotStars = useMemo(
     () =>
@@ -218,6 +219,26 @@ export default function Dashboard() {
       window.cancelAnimationFrame(frameId)
     }
   }, [])
+
+  const clearCloseTimeout = () => {
+    if (closeTimeoutRef.current !== null) {
+      window.clearTimeout(closeTimeoutRef.current)
+      closeTimeoutRef.current = null
+    }
+  }
+
+  const openPlanetModal = (planetId: string) => {
+    clearCloseTimeout()
+    setActivePlanetId(planetId)
+  }
+
+  const schedulePlanetModalClose = (planetId: string) => {
+    clearCloseTimeout()
+    closeTimeoutRef.current = window.setTimeout(() => {
+      setActivePlanetId((current) => (current === planetId ? null : current))
+      closeTimeoutRef.current = null
+    }, 140)
+  }
 
   return (
     <main
@@ -290,22 +311,6 @@ export default function Dashboard() {
             <div
               key={planet.id}
               className="dashboard__planet-wrap"
-              onBlur={() => {
-                setActivePlanetId((current) =>
-                  current === planet.id ? null : current
-                )
-              }}
-              onFocus={() => {
-                setActivePlanetId(planet.id)
-              }}
-              onMouseEnter={() => {
-                setActivePlanetId(planet.id)
-              }}
-              onMouseLeave={() => {
-                setActivePlanetId((current) =>
-                  current === planet.id ? null : current
-                )
-              }}
               style={{
                 left: `calc(50% + ${Math.cos(angle) * planet.radius}vmin)`,
                 top: `calc(50% + ${Math.sin(angle) * planet.radius}vmin)`,
@@ -314,6 +319,18 @@ export default function Dashboard() {
               <img
                 alt={planet.label}
                 className="dashboard__planet"
+                onBlur={() => {
+                  schedulePlanetModalClose(planet.id)
+                }}
+                onFocus={() => {
+                  openPlanetModal(planet.id)
+                }}
+                onMouseEnter={() => {
+                  openPlanetModal(planet.id)
+                }}
+                onMouseLeave={() => {
+                  schedulePlanetModalClose(planet.id)
+                }}
                 src={planet.asset}
                 style={{ width: `${planet.size}vmin` }}
               />
@@ -328,6 +345,12 @@ export default function Dashboard() {
                     ? " dashboard__planet-modal--below"
                     : ""
                 }`}
+                onMouseEnter={() => {
+                  openPlanetModal(planet.id)
+                }}
+                onMouseLeave={() => {
+                  schedulePlanetModalClose(planet.id)
+                }}
               >
                 <p className="dashboard__planet-modal-title">{planet.label}</p>
                 <ul className="dashboard__planet-modal-list">
