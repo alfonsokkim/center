@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import type { SessionData } from '../types';
 
 interface SessionProps {
@@ -6,13 +6,43 @@ interface SessionProps {
   onUpdate: (newData: Partial<SessionData> | null) => void;
 }
 
+const formatSeconds = (totalSeconds: number) => {
+  const h = Math.floor(totalSeconds / 3600);
+  const m = Math.floor((totalSeconds % 3600) / 60);
+  const s = totalSeconds % 60;
+  return [h, m, s].map(v => v.toString().padStart(2, '0')).join(':');
+};
+
 export default function SessionView({ data, onUpdate }: SessionProps) {
   const [tab, setTab] = useState<'break' | 'end'>('break');
-  
-  // 1. Allow state to be an empty string
-  const [breakMinutes, setBreakMinutes] = useState<number | "">(""); 
+  const [breakMinutes, setBreakMinutes] = useState<number | "">("");
 
-  // 2. Handle the input change to allow backspacing
+  const getInitialTime = () => {
+    if (!data.startTime) return "00:00:00";
+    
+    const start = new Date(data.startTime).getTime();
+    const now = new Date().getTime();
+    const secondsElapsed = Math.floor((now - start) / 1000);
+
+    if (data.sessionType === 'timed') {
+      const totalSecondsGoal = (data.hours * 3600) + (data.minutes * 60);
+      const remaining = totalSecondsGoal - secondsElapsed;
+      return formatSeconds(remaining > 0 ? remaining : 0);
+    } else {
+      return formatSeconds(secondsElapsed);
+    }
+  };
+
+  const [displayTime, setDisplayTime] = useState(getInitialTime);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setDisplayTime(getInitialTime());
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, [data]);
+
   const handleBreakChange = (val: string) => {
     if (val === "") {
       setBreakMinutes("");
@@ -20,18 +50,22 @@ export default function SessionView({ data, onUpdate }: SessionProps) {
     }
     const num = parseInt(val, 10);
     if (!isNaN(num)) {
-      // We clamp the max (e.g., 120 mins) but allow 0/empty while typing
       setBreakMinutes(Math.min(120, Math.max(0, num)));
     }
   };
 
   const handleStartBreak = () => {
-    // 3. Fallback to 1 minute if they leave it blank or 0 when clicking start
-    const finalMinutes = Number(breakMinutes) > 0 ? Number(breakMinutes) : 1;
+    const finalMinutes = Number(breakMinutes) > 0 ? Number(breakMinutes) : 5;
     
+    // Calculate exactly how many seconds have been worked so far
+    const start = new Date(data.startTime || "").getTime();
+    const now = new Date().getTime();
+    const workedSeconds = Math.floor((now - start) / 1000);
+
     onUpdate({ 
       status: 'break',
-      minutes: finalMinutes 
+      minutes: finalMinutes,
+      workedSeconds: workedSeconds
     });
   };
 
@@ -42,9 +76,12 @@ export default function SessionView({ data, onUpdate }: SessionProps) {
       </header>
       
       <main className="content">
-        <div className="current-task-display">
-          <h4>Working on</h4>
-          <h1>{data.task}</h1>
+        <div className="timer-display-container">
+          <h1 className="main-timer">{displayTime}</h1>
+          <div className="current-task-display">
+            <h4>Working on</h4>
+            <p>{data.task}</p>
+          </div>
         </div>
 
         <nav className="tab-nav">
@@ -70,10 +107,9 @@ export default function SessionView({ data, onUpdate }: SessionProps) {
                 <div className="time-unit">
                   <input 
                     type="number" 
-                    // 4. Use the state directly
                     value={breakMinutes} 
                     onChange={(e) => handleBreakChange(e.target.value)}
-                    placeholder=""
+                    placeholder="5"
                   />
                   <span>minutes</span>
                 </div>
@@ -81,7 +117,6 @@ export default function SessionView({ data, onUpdate }: SessionProps) {
               <button 
                 className="break-btn" 
                 onClick={handleStartBreak}
-                // Disable if they haven't typed a number yet
                 disabled={breakMinutes === "" || breakMinutes === 0}
               >
                 Start Break
