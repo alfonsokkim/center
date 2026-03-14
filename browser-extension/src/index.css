@@ -1,8 +1,23 @@
-body {
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
+
+* {
+  box-sizing: border-box;
   margin: 0;
+  padding: 0;
+}
+
+body {
   font-family: 'Inter', system-ui, sans-serif;
-  background-color: #ffffff;
-  /* Crucial for Extensions: */
-  width: 350px;
-  min-height: 400px;
+  width: 360px;
+  min-height: 600px;
+  color: #fff;
+  background: linear-gradient(175deg, #2e3a9e 0%, #1e2878 25%, #151f70 55%, #0e1560 100%);
+  overflow-x: hidden;
+}
+
+#root {
+  width: 360px;
+  min-height: 600px;
+  position: relative;
+  overflow: hidden;
 }

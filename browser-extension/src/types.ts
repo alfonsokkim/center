@@ -7,4 +7,13 @@ export interface SessionData {
   hours: number;
   minutes: number;
   startTime?: string;
+  url?: string;
+  workedSeconds?: number;
+}
+
+export interface SessionHistory {
+  id: string;
+  task: string;
+  relevanceScore: number;
+  durationSeconds: number;
 }

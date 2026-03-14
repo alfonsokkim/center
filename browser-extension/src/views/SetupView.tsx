@@ -1,137 +1,392 @@
-import { useState } from 'react';
-import type { SessionData } from '../types';
+import { useState, useEffect } from 'react';
+import type { SessionData, SessionHistory } from '../types';
+import happySun from '../assets/happy-sun.png';
+import { postUrl, sendSessionGoal } from '../Server';
+
+const isExtension = typeof chrome !== 'undefined' && !!chrome?.storage?.local;
+
+function formatDuration(seconds: number): string {
+  if (seconds < 60) return `${seconds}s`;
+  const h = Math.floor(seconds / 3600);
+  const m = Math.floor((seconds % 3600) / 60);
+  if (h > 0) return `${h}h ${m > 0 ? `${m}m` : ''}`.trim();
+  return `${m}m`;
+}
+
+// 4-pointed sparkle star SVG
+function Star({ x, y, size = 14, opacity = 0.7 }: { x: number; y: number; size?: number; opacity?: number }) {
+  return (
+    <svg
+      className="star"
+      style={{ left: x, top: y, width: size, height: size, opacity }}
+      viewBox="0 0 20 20"
+      fill="white"
+    >
+      <path d="M10 0 L11.2 8.8 L20 10 L11.2 11.2 L10 20 L8.8 11.2 L0 10 L8.8 8.8 Z" />
+    </svg>
+  );
+}
+
+function Dot({ x, y, size = 5, opacity = 0.5 }: { x: number; y: number; size?: number; opacity?: number }) {
+  return (
+    <div
+      className="star"
+      style={{
+        left: x,
+        top: y,
+        width: size,
+        height: size,
+        borderRadius: '50%',
+        background: 'white',
+        opacity,
+      }}
+    />
+  );
+}
 
 interface SetupProps {
   onStart: (data: Omit<SessionData, 'status'>) => void;
 }
 
+function scoreColor(r: number) {
+  if (r >= 70) return '#4dffa0';
+  if (r >= 45) return '#F5C518';
+  return '#ff6b6b';
+}
+
 export default function SetupView({ onStart }: SetupProps) {
-  const [tab, setTab] = useState<'new' | 'history'>('new');
+  const [screen, setScreen] = useState<'home' | 'setup' | 'history'>('home');
   const [task, setTask] = useState('');
-  const [sessionType, setSessionType] = useState<'timed' | 'unlimited'>('unlimited');
-  const [hours, setHours] = useState<number | "">("");
-  const [minutes, setMinutes] = useState<number | "">("");
+  const [sessionType, setSessionType] = useState<'timed' | 'unlimited'>('timed');
+  const [hours, setHours] = useState<number | ''>(0);
+  const [minutes, setMinutes] = useState<number | ''>(30);
+  const [history, setHistory] = useState<SessionHistory[]>([]);
 
-  // Validation logic
-  // This ensures that if it's "timed", at least one box has a number greater than 0
+  // Load real history when visiting the history screen
+  useEffect(() => {
+    if (screen !== 'history') return;
+    if (isExtension) {
+      chrome.storage.local.get(['sessionHistory'], (res: { sessionHistory?: SessionHistory[] }) => {
+        setHistory(res.sessionHistory || []);
+      });
+    }
+  }, [screen]);
+
   const hasTime = sessionType === 'unlimited' || (Number(hours) > 0 || Number(minutes) > 0);
-
-  // Your button stays disabled if the task is empty OR the time isn't valid
   const isStartDisabled = !task.trim() || !hasTime;
 
-  const handleTimeChange = (val: string, setter: (n: number | "") => void, max: number) => {
-    // If the input is empty (backspaced), set state to empty string
-    if (val === "") {
-      setter("");
-      return;
-    }
-
+  const handleTimeChange = (val: string, setter: (n: number | '') => void, max: number) => {
+    if (val === '') { setter(''); return; }
     const num = parseInt(val, 10);
-
-    // If it's a valid number, clamp it between 0 and your max
-    if (!isNaN(num)) {
-      const clamped = Math.min(max, Math.max(0, num));
-      setter(clamped);
-    }
+    if (!isNaN(num)) setter(Math.min(max, Math.max(0, num)));
   };
 
-  const handleStart = () => {
-  onStart({
-    task: task.trim(),
-    sessionType,
-    // If it's "" (empty), treat it as 0 for the API/Storage
-    hours: sessionType === 'timed' ? (hours || 0) : 0,
-    minutes: sessionType === 'timed' ? (minutes || 0) : 0,
-    startTime: new Date().toISOString(),
-  });
-};
+  const pad = (n: number | '') => String(n || 0).padStart(2, '0');
+  const timerDisplay = `${pad(hours)}:${pad(minutes)}:00`;
 
-  return (
-    <div className="view-container">
-      <div>
-        <h2>CENTR</h2>
-        <h4>Stay focused on your work</h4>
-      </div>
-      <nav className="tab-nav">
-        <button 
-          className={tab === 'new' ? 'active' : ''} 
-          onClick={() => setTab('new')}
-        >
-          New Session
-        </button>
-        <button 
-          className={tab === 'history' ? 'active' : ''} 
-          onClick={() => setTab('history')}
-        >
-          History
-        </button>
-      </nav>
+  // ── friend's handleStart logic ──────────────────────────────────────────
+  const handleStart = async () => {
+    // 1. Get the current tab URL
+    const tabs = await new Promise<any[]>(resolve =>
+      isExtension
+        ? chrome.tabs.query({ active: true, currentWindow: true }, resolve)
+        : resolve([{ url: '' }])
+    );
+    const currentUrl = tabs[0]?.url || '';
 
-      <div className="content">
-        {tab === 'new' ? (
-          <div className="setup-screen">
-            <input 
-              className="task-input"
-              value={task} 
-              onChange={e => setTask(e.target.value)} 
-              placeholder="What are you working on?" 
-            />
+    // 2. Build session payload
+    const sessionPayload = {
+      task: task.trim(),
+      sessionType,
+      hours:   sessionType === 'timed' ? (Number(hours)   || 0) : 0,
+      minutes: sessionType === 'timed' ? (Number(minutes) || 0) : 0,
+      startTime: new Date().toISOString(),
+      url: currentUrl,
+    };
 
-            <div className="radio-group">
-              <label className="radio-label">
-                <input 
-                  type="radio" 
-                  checked={sessionType === 'unlimited'} 
-                  onChange={() => setSessionType('unlimited')} 
-                /> 
-                Unlimited
-              </label>
-              <label className="radio-label">
-                <input 
-                  type="radio" 
-                  checked={sessionType === 'timed'} 
-                  onChange={() => setSessionType('timed')} 
-                /> 
-                Timed
-              </label>
-            </div>
+    // 3. Send url to /sessionstart
+    await postUrl(currentUrl);
 
-            {sessionType === 'timed' && (
-              <div className="duration-picker">
-                <div className="time-unit">
-                  <input 
-                    type="number" 
-                    value={hours || ''} 
-                    onChange={(e) => handleTimeChange(e.target.value, setHours, 23)} 
-                    placeholder="" 
-                  />
-                  <span>hours</span>
-                </div>
-                <div className="time-unit">
-                  <input 
-                    type="number" 
-                    value={minutes || ''} 
-                    onChange={(e) => handleTimeChange(e.target.value, setMinutes, 59)} 
-                    placeholder="" 
-                  />
-                  <span>minutes</span>
-                </div>
-              </div>
-            )}
+    // 4. Send goal to backend
+    await sendSessionGoal(task.trim());
 
-            <button 
-              className="start-btn" 
-              disabled={isStartDisabled}
-              onClick={handleStart}
-            >
-              Start Session
-            </button>
+    // 5. Update UI + storage
+    onStart(sessionPayload);
+  };
+
+  /* ── HOME SCREEN ─────────────────────────────────────── */
+  if (screen === 'home') {
+    return (
+      <div className="centr-screen" style={{ justifyContent: 'space-between', paddingBottom: 40 }}>
+        {/* Stars */}
+        <Star x={24}  y={90}  size={16} />
+        <Star x={290} y={60}  size={12} />
+        <Star x={60}  y={280} size={10} />
+        <Star x={310} y={300} size={14} />
+        <Star x={180} y={500} size={10} />
+        <Star x={40}  y={480} size={8}  opacity={0.5} />
+        <Star x={300} y={480} size={12} opacity={0.6} />
+        <Dot  x={148} y={38}  size={6}  opacity={0.6} />
+        <Dot  x={26}  y={170} size={5}  opacity={0.4} />
+        <Dot  x={330} y={200} size={5}  opacity={0.4} />
+        <Dot  x={80}  y={400} size={4}  opacity={0.3} />
+        <Dot  x={260} y={420} size={6}  opacity={0.5} />
+
+        {/* Top buttons */}
+        <div style={{ display: 'flex', gap: 10, padding: '20px 20px 0', width: '100%', zIndex: 1 }}>
+          <button
+            className="btn-sky"
+            style={{ flex: 1, borderRadius: 12, fontSize: 13, padding: '11px 0' }}
+            onClick={() => setScreen('setup')}
+          >
+            NEW SESSION
+          </button>
+          <button
+            className="btn-navy"
+            style={{ flex: 1, borderRadius: 12, fontSize: 13 }}
+            onClick={() => setScreen('history')}
+          >
+            VIEW HISTORY
+          </button>
+        </div>
+
+        {/* Center content */}
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 20, zIndex: 1 }}>
+          <img src={happySun} alt="Centr Sun" style={{ width: 160, height: 160, objectFit: 'contain', filter: 'drop-shadow(0 0 30px rgba(245,197,24,0.5))' }} />
+          <div style={{ textAlign: 'center' }}>
+            <h1 style={{ fontSize: 36, fontWeight: 900, letterSpacing: '0.08em', lineHeight: 1 }}>CENTR</h1>
+            <p style={{ fontSize: 15, fontStyle: 'italic', color: 'rgba(255,255,255,0.8)', marginTop: 8 }}>
+              Stay close to what matters
+            </p>
           </div>
-        ) : (
-          <div className="history-list">
-            <p>Past sessions will appear here.</p>
+        </div>
+
+        <div style={{ height: 40 }} />
+      </div>
+    );
+  }
+
+  /* ── HISTORY SCREEN ─────────────────────────────────── */
+  if (screen === 'history') {
+    return (
+      <div className="centr-screen" style={{ paddingTop: 16, alignItems: 'stretch' }}>
+        <Star x={24}  y={80}  size={12} opacity={0.5} />
+        <Star x={300} y={60}  size={10} opacity={0.5} />
+        <Star x={30}  y={500} size={10} opacity={0.4} />
+        <Star x={305} y={490} size={12} opacity={0.5} />
+        <Dot  x={148} y={22}  size={6}  opacity={0.5} />
+        <Dot  x={338} y={200} size={5}  opacity={0.35} />
+
+        {/* Header */}
+        <div style={{ display: 'flex', alignItems: 'center', padding: '0 20px', zIndex: 1, gap: 12 }}>
+          <button
+            onClick={() => setScreen('home')}
+            style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.6)', cursor: 'pointer', fontSize: 20, lineHeight: 1, padding: 0 }}
+          >
+            ←
+          </button>
+          <h2 style={{ fontSize: 20, fontWeight: 900, letterSpacing: '0.06em' }}>SESSION HISTORY</h2>
+        </div>
+
+        {/* Summary bar */}
+        <div style={{
+          display: 'flex',
+          gap: 8,
+          padding: '14px 20px 0',
+          zIndex: 1,
+        }}>
+          {[
+            { label: 'Sessions', value: history.length || '—' },
+            { label: 'Avg Focus', value: history.length ? `${Math.round(history.reduce((s, h) => s + h.relevanceScore, 0) / history.length)}%` : '—' },
+            { label: 'Best', value: history.length ? `${Math.max(...history.map(h => h.relevanceScore))}%` : '—' },
+          ].map(stat => (
+            <div key={stat.label} style={{
+              flex: 1,
+              background: 'rgba(14,21,96,0.7)',
+              border: '1px solid rgba(255,255,255,0.1)',
+              borderRadius: 12,
+              padding: '10px 4px',
+              textAlign: 'center',
+            }}>
+              <p style={{ fontSize: 18, fontWeight: 800 }}>{stat.value}</p>
+              <p style={{ fontSize: 10, color: 'rgba(255,255,255,0.5)', marginTop: 2 }}>{stat.label}</p>
+            </div>
+          ))}
+        </div>
+
+        {/* Session list */}
+        <div style={{ padding: '16px 20px 0', display: 'flex', flexDirection: 'column', gap: 10, zIndex: 1 }}>
+          {history.length === 0 && (
+            <p style={{ textAlign: 'center', color: 'rgba(255,255,255,0.35)', fontSize: 13, padding: '20px 0' }}>
+              No past sessions yet. Complete a session to see it here.
+            </p>
+          )}
+          {history.slice(0, 5).map((session, i) => (
+            <div key={session.id} style={{
+              background: 'rgba(14,21,96,0.65)',
+              border: '1px solid rgba(255,255,255,0.1)',
+              borderRadius: 14,
+              padding: '12px 14px',
+              display: 'flex',
+              alignItems: 'center',
+              gap: 12,
+            }}>
+              {/* Index */}
+              <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.35)', fontWeight: 700, minWidth: 16 }}>
+                {i + 1}
+              </span>
+
+              {/* Task + duration */}
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <p style={{ fontSize: 13, fontWeight: 700, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                  {session.task}
+                </p>
+                <p style={{ fontSize: 11, color: 'rgba(255,255,255,0.45)', marginTop: 2 }}>
+                  {formatDuration(session.durationSeconds)}
+                </p>
+              </div>
+
+              {/* Focus score ring */}
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3, minWidth: 44 }}>
+                <svg width={36} height={36} viewBox="0 0 36 36">
+                  <circle cx={18} cy={18} r={14} fill="none" stroke="rgba(255,255,255,0.1)" strokeWidth={3} />
+                  <circle
+                    cx={18} cy={18} r={14}
+                    fill="none"
+                    stroke={scoreColor(session.relevanceScore)}
+                    strokeWidth={3}
+                    strokeDasharray={`${(session.relevanceScore / 100) * 88} 88`}
+                    strokeLinecap="round"
+                    transform="rotate(-90 18 18)"
+                    style={{ filter: `drop-shadow(0 0 4px ${scoreColor(session.relevanceScore)})` }}
+                  />
+                  <text x={18} y={22} textAnchor="middle" fontSize={9} fontWeight="800" fill={scoreColor(session.relevanceScore)}>
+                    {session.relevanceScore}%
+                  </text>
+                </svg>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* New session CTA */}
+        <div style={{ padding: '16px 20px', zIndex: 1, marginTop: 'auto' }}>
+          <button className="btn-yellow" onClick={() => setScreen('setup')}>
+            NEW SESSION
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  /* ── SETUP SCREEN ────────────────────────────────────── */
+  return (
+    <div className="centr-screen" style={{ paddingTop: 16 }}>
+      {/* Stars */}
+      <Star x={24}  y={100} size={14} />
+      <Star x={290} y={80}  size={12} />
+      <Star x={60}  y={260} size={10} opacity={0.6} />
+      <Star x={310} y={320} size={12} />
+      <Star x={180} y={520} size={10} />
+      <Star x={30}  y={480} size={8}  opacity={0.5} />
+      <Star x={305} y={470} size={10} opacity={0.6} />
+      <Dot  x={145} y={36}  size={7}  opacity={0.5} />
+      <Dot  x={22}  y={190} size={5}  opacity={0.4} />
+      <Dot  x={338} y={210} size={5}  opacity={0.4} />
+      <Dot  x={250} y={450} size={6}  opacity={0.5} />
+
+      {/* VIEW HISTORY top right */}
+      <div style={{ width: '100%', display: 'flex', justifyContent: 'flex-end', padding: '0 20px 0', zIndex: 1 }}>
+        <button className="btn-navy" onClick={() => setScreen('history')}>
+          VIEW HISTORY
+        </button>
+      </div>
+
+      {/* Sun */}
+      <div style={{ marginTop: 20, zIndex: 1 }}>
+        <img src={happySun} alt="Sun" style={{ width: 120, height: 120, objectFit: 'contain', filter: 'drop-shadow(0 0 24px rgba(245,197,24,0.5))' }} />
+      </div>
+
+      {/* Title */}
+      <h2 style={{ fontSize: 26, fontWeight: 900, letterSpacing: '0.08em', marginTop: 12, zIndex: 1 }}>
+        NEW SESSION
+      </h2>
+
+      {/* Form */}
+      <div style={{ width: '100%', padding: '20px 24px 0', display: 'flex', flexDirection: 'column', gap: 14, zIndex: 1 }}>
+        {/* Task input */}
+        <input
+          className="white-input"
+          value={task}
+          onChange={e => setTask(e.target.value)}
+          placeholder="What are you working on?"
+        />
+
+        {/* TIMED / UNTIMED toggle */}
+        <div className="pill-toggle">
+          <button
+            className={sessionType === 'timed' ? 'active' : ''}
+            onClick={() => setSessionType('timed')}
+          >
+            TIMED
+          </button>
+          <button
+            className={sessionType === 'unlimited' ? 'active' : ''}
+            onClick={() => setSessionType('unlimited')}
+          >
+            UNTIMED
+          </button>
+        </div>
+
+        {/* Time input (shown for timed) */}
+        {sessionType === 'timed' && (
+          <div style={{ position: 'relative' }}>
+            <input
+              className="white-input"
+              style={{ textAlign: 'center', fontSize: 18, fontWeight: 700, letterSpacing: '0.08em', padding: '12px 16px' }}
+              value={timerDisplay}
+              readOnly
+              onFocus={e => e.target.blur()}
+            />
+            {/* Hidden inputs for actual editing */}
+            <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
+              <div style={{ flex: 1 }}>
+                <input
+                  className="white-input"
+                  type="number"
+                  value={hours}
+                  onChange={e => handleTimeChange(e.target.value, setHours, 23)}
+                  placeholder="HH"
+                  style={{ textAlign: 'center', padding: '8px', fontSize: 13 }}
+                  min={0} max={23}
+                />
+                <p style={{ fontSize: 11, color: 'rgba(255,255,255,0.6)', textAlign: 'center', marginTop: 3 }}>hours</p>
+              </div>
+              <div style={{ flex: 1 }}>
+                <input
+                  className="white-input"
+                  type="number"
+                  value={minutes}
+                  onChange={e => handleTimeChange(e.target.value, setMinutes, 59)}
+                  placeholder="MM"
+                  style={{ textAlign: 'center', padding: '8px', fontSize: 13 }}
+                  min={0} max={59}
+                />
+                <p style={{ fontSize: 11, color: 'rgba(255,255,255,0.6)', textAlign: 'center', marginTop: 3 }}>minutes</p>
+              </div>
+            </div>
           </div>
         )}
+
+        {/* START button */}
+        <button
+          className="btn-yellow"
+          style={{ marginTop: 4 }}
+          disabled={isStartDisabled}
+          onClick={handleStart}
+        >
+          START
+        </button>
       </div>
     </div>
   );
