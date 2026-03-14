@@ -99,15 +99,34 @@ export default function SessionView({ data, onUpdate }: SessionProps) {
   const [tabs, setTabs]               = useState<TabInfo[]>([]);
   const [nextTabIndex, setNextTabIndex] = useState(0);
 
-  // Auto-add first 3 tabs with staggered delays for a nice "planets appearing" effect
+  // On mount: restore tabs if returning from break (workedSeconds is set), otherwise stagger-add fresh
+  const isExtension = typeof chrome !== 'undefined' && !!chrome?.storage?.local;
   useEffect(() => {
-    [400, 1200, 2200].forEach((delay, i) => {
-      setTimeout(() => {
-        setTabs(prev => prev.length > i ? prev : [...prev, resolveTab(PRESET_TABS[i])]);
-        setNextTabIndex(i + 1);
-      }, delay);
-    });
+    if (data.workedSeconds && isExtension) {
+      // Returning from break — restore saved tabs so orbit doesn't reset
+      chrome.storage.local.get(['sessionTabs', 'sessionNextTabIndex'], (res: { sessionTabs?: TabInfo[]; sessionNextTabIndex?: number }) => {
+        if (res.sessionTabs?.length) {
+          setTabs(res.sessionTabs);
+          setNextTabIndex(res.sessionNextTabIndex ?? res.sessionTabs.length);
+        }
+      });
+    } else {
+      // Fresh session start — stagger-add first 3 demo tabs
+      [400, 1200, 2200].forEach((delay, i) => {
+        setTimeout(() => {
+          setTabs(prev => prev.length > i ? prev : [...prev, resolveTab(PRESET_TABS[i])]);
+          setNextTabIndex(i + 1);
+        }, delay);
+      });
+    }
   }, []);
+
+  // Persist tabs to storage so they survive the break unmount/remount
+  useEffect(() => {
+    if (isExtension && tabs.length > 0) {
+      chrome.storage.local.set({ sessionTabs: tabs, sessionNextTabIndex: nextTabIndex });
+    }
+  }, [tabs, nextTabIndex]);
 
   // Adds the next preset tab one at a time when the demo "+ Add Tab" button is clicked
   const addNextTab = useCallback(() => {

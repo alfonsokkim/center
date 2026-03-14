@@ -59,7 +59,7 @@ function App() {
       // End session: save to history, wipe storage, go idle
       if (sessionData) saveToHistory(sessionData);
       if (isExtension) {
-        chrome.storage.local.remove('sessionData', () => { setStatus('idle'); setSessionData(null); });
+        chrome.storage.local.remove(['sessionData', 'sessionTabs', 'sessionNextTabIndex'], () => { setStatus('idle'); setSessionData(null); });
       } else {
         setStatus('idle'); setSessionData(null);
       }
