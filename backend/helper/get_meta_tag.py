@@ -1,8 +1,8 @@
 from bs4 import BeautifulSoup
 
-def get_meta_tag(doc):
-    soup = BeautifulSoup(doc, features="html.parser")
-    print(soup.find_all("meta"))
+def getMetaTag(htmlDoc):
+    soup = BeautifulSoup(htmlDoc, features="html.parser")
+    return (soup.find_all("meta") + soup.find_all("title"))
 
 #test
 str = """
