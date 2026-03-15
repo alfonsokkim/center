@@ -1,8 +1,275 @@
-.task-input {
-  height: 50px;
+/* ── Shared view wrapper ─────────────────────────────── */
+.view-container {
+  position: relative;
+  width: 360px;
+  min-height: 600px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  overflow: hidden;
+  background: linear-gradient(175deg, #2e3a9e 0%, #1e2878 25%, #151f70 55%, #0e1560 100%);
+  color: #fff;
+  font-family: inherit;
 }
 
-.task-input::placeholder {
-  font-style: italic;
-  opacity: 0.7;
+/* ── Home screen ─────────────────────────────────────── */
+.home-screen {
+  justify-content: space-between;
+  padding-bottom: 40px;
 }
+
+.home-nav {
+  display: flex;
+  gap: 10px;
+  padding: 20px 20px 0;
+  width: 100%;
+  z-index: 1;
+}
+.home-nav .btn-sky  { flex: 1; font-size: 13px; padding: 11px 0; }
+.home-nav .btn-navy { flex: 1; font-size: 13px; }
+
+.home-hero {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+  z-index: 1;
+}
+.home-sun {
+  width: 160px;
+  height: 160px;
+  object-fit: contain;
+  filter: drop-shadow(0 0 30px rgba(245,197,24,0.5));
+}
+.home-title { text-align: center; }
+.home-title h1 {
+  font-size: 36px;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  line-height: 1;
+  margin: 0;
+}
+.home-title p {
+  font-size: 15px;
+  font-style: italic;
+  color: rgba(255,255,255,0.8);
+  margin-top: 8px;
+}
+
+/* ── Setup screen header ─────────────────────────────── */
+.heading-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding-top: 16px;
+  z-index: 1;
+}
+.setup-sun {
+  width: 80px;
+  height: 80px;
+  object-fit: contain;
+  filter: drop-shadow(0 0 20px rgba(245,197,24,0.5));
+}
+.heading-container h2 {
+  font-size: 26px;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  margin: 8px 0 4px;
+}
+.heading-container h4 {
+  font-size: 13px;
+  font-style: italic;
+  color: rgba(255,255,255,0.7);
+  font-weight: 400;
+  margin: 0 0 12px;
+}
+
+/* ── Tab nav ─────────────────────────────────────────── */
+.tab-nav {
+  display: flex;
+  background: #1a2580;
+  border-radius: 50px;
+  padding: 4px;
+  width: calc(100% - 40px);
+  z-index: 1;
+}
+.tab-nav button {
+  flex: 1;
+  border: none;
+  border-radius: 50px;
+  padding: 10px 0;
+  font-weight: 700;
+  font-size: 13px;
+  letter-spacing: 0.06em;
+  cursor: pointer;
+  background: transparent;
+  color: rgba(255,255,255,0.5);
+  transition: background 0.2s, color 0.2s;
+}
+.tab-nav button.active {
+  background: #7fb8f5;
+  color: #0e1560;
+}
+
+/* ── Content area ────────────────────────────────────── */
+.content {
+  padding: 16px 20px 20px;
+  width: 100%;
+  z-index: 1;
+}
+
+/* ── Setup form ──────────────────────────────────────── */
+.setup-screen {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.setup-screen > p {
+  font-size: 12px;
+  color: rgba(255,255,255,0.65);
+  margin: 0;
+}
+
+.task-input {
+  background: #fff;
+  color: #333;
+  border: none;
+  border-radius: 12px;
+  padding: 14px 16px;
+  font-size: 14px;
+  width: 100%;
+  outline: none;
+  font-family: inherit;
+  resize: none;
+  height: 80px;
+  box-sizing: border-box;
+}
+.task-input::placeholder {
+  color: #aaa;
+  font-style: italic;
+  opacity: 0.9;
+}
+
+/* Radio group → pill-style */
+.radio-group {
+  display: flex;
+  background: #1a2580;
+  border-radius: 50px;
+  padding: 4px;
+  gap: 0;
+}
+.radio-label {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50px;
+  padding: 10px 0;
+  font-weight: 700;
+  font-size: 13px;
+  letter-spacing: 0.06em;
+  cursor: pointer;
+  color: rgba(255,255,255,0.5);
+  transition: background 0.2s, color 0.2s;
+}
+.radio-label:has(input:checked) {
+  background: #7fb8f5;
+  color: #0e1560;
+}
+.radio-label input[type="radio"] { display: none; }
+
+/* Duration picker */
+.duration-picker {
+  display: flex;
+  gap: 8px;
+}
+.time-unit {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+.time-unit input {
+  background: #fff;
+  color: #333;
+  border: none;
+  border-radius: 12px;
+  padding: 8px;
+  font-size: 14px;
+  width: 100%;
+  outline: none;
+  text-align: center;
+  font-family: inherit;
+  box-sizing: border-box;
+}
+.time-unit span {
+  font-size: 11px;
+  color: rgba(255,255,255,0.6);
+}
+
+/* Start button */
+.start-btn {
+  background: #F5C518;
+  color: #0e1560;
+  border: none;
+  border-radius: 12px;
+  font-weight: 800;
+  font-size: 15px;
+  letter-spacing: 0.08em;
+  cursor: pointer;
+  padding: 14px 0;
+  width: 100%;
+  transition: opacity 0.15s, transform 0.1s;
+  margin-top: 4px;
+}
+.start-btn:hover  { opacity: 0.9; transform: translateY(-1px); }
+.start-btn:active { transform: translateY(0); }
+.start-btn:disabled { opacity: 0.45; cursor: not-allowed; transform: none; }
+
+/* ── History tab ─────────────────────────────────────── */
+.history-list {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.history-stats {
+  display: flex;
+  gap: 8px;
+}
+.history-stat-card {
+  flex: 1;
+  background: rgba(14,21,96,0.7);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 12px;
+  padding: 10px 4px;
+  text-align: center;
+}
+.stat-value { font-size: 18px; font-weight: 800; margin: 0; }
+.stat-label { font-size: 10px; color: rgba(255,255,255,0.5); margin: 2px 0 0; }
+
+.history-rows {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.history-empty {
+  text-align: center;
+  color: rgba(255,255,255,0.35);
+  font-size: 13px;
+  padding: 20px 0;
+}
+.history-row {
+  background: rgba(14,21,96,0.65);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 14px;
+  padding: 12px 14px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.history-rank { font-size: 12px; color: rgba(255,255,255,0.35); font-weight: 700; min-width: 16px; }
+.history-info { flex: 1; min-width: 0; }
+.history-task { font-size: 13px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin: 0; }
+.history-duration { font-size: 11px; color: rgba(255,255,255,0.45); margin: 2px 0 0; }
