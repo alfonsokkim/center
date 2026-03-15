@@ -155,9 +155,11 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
         await sendTabTime(state.currentTabUrl, elapsedSeconds, state.sessionId);
       }
       
-      // Ping the backend to let it know the session is closed
+      // Ping the backend with the sessionId AND the total time
       if (state.sessionId) {
-        await postSessionEnd(state.sessionId);
+        // Expect the React popup to send 'totalTime' in the message payload
+        const finalTime = message.totalTime || 0; 
+        await postSessionEnd(state.sessionId, finalTime);
       }
 
       await chrome.storage.local.set({
@@ -165,7 +167,7 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
         isOnBreak: false,
         currentTabUrl: "",
         tabStartTime: 0,
-        sessionId: "" // Wipe the ID so it's fresh for next time
+        sessionId: "" 
       });
     }
 

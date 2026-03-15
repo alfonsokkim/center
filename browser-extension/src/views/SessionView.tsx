@@ -72,7 +72,7 @@ export default function SessionView({ data, onUpdate }: SessionProps) {
 
     const start = new Date(data.startTime || "").getTime();
     const now = new Date().getTime();
-    const workedSeconds = Math.floor((now - start) / 1000);
+    const currentSegmentSeconds = Math.floor((now - start) / 1000);
 
     // Tell the Background Script to pause tracking and send the final tab time
     chrome.runtime.sendMessage({ action: "START_BREAK" });
@@ -80,8 +80,24 @@ export default function SessionView({ data, onUpdate }: SessionProps) {
     onUpdate({
       status: 'break',
       minutes: finalMinutes,
-      workedSeconds: workedSeconds
+      workedSeconds: (data.workedSeconds || 0) + currentSegmentSeconds
     });
+  };
+
+  const handleEndSession = () => {
+    const start = new Date(data.startTime || "").getTime();
+    const now = new Date().getTime();
+    const currentSegmentSeconds = Math.floor((now - start) / 1000);
+    const totalActiveSeconds = (data.workedSeconds || 0) + currentSegmentSeconds;
+
+    // 1. Tell Background script to halt and send final totalTime to the backend
+    chrome.runtime.sendMessage({ 
+      action: "END_SESSION",
+      totalTime: totalActiveSeconds 
+    });
+
+    // 2. Tell React to go back to SetupView
+    onUpdate(null);
   };
 
   return (
@@ -147,13 +163,7 @@ export default function SessionView({ data, onUpdate }: SessionProps) {
               <p>Are you sure you want to end your focus session?</p>
               <button
                 className="end-btn"
-                onClick={() => {
-                  // Tell Background script to halt and send final tab time
-                  chrome.runtime.sendMessage({ action: "END_SESSION" });
-
-                  // Tell React to go back to SetupView
-                  onUpdate(null);
-                }}
+                onClick={handleEndSession}
               >
                 Yes, End Session
               </button>
