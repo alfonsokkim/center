@@ -8,6 +8,9 @@ export const postSessionGoal = async (goal: string) => {
       body: JSON.stringify({ goal }),
     });
 
+    console.log(response)
+    console.log("hello")
+
     if (!response.ok) throw new Error(`Goal sync failed: ${response.status}`);
     // This will return the JSON containing your new sessionId
     return await response.json(); 

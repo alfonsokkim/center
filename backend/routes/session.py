@@ -1,26 +1,37 @@
+import json
 from fastapi import APIRouter;
 from routes.body_types.session_types import TabData, SessionStartData
 from db.storage import *
 from services.relevance import relevance_score_for_url
 router = APIRouter()
 
-@router.post("/start")
+
+@router.post("/goal")
 async def start_session(sessionStart:SessionStartData):
+    print(sessionStart.goal)
     session = create_session(sessionStart.goal)
-    # store this session somewhere later
+    print(session.id)
     # return session.id
-    return 200
+    print(json.dumps({
+        "sessionId" : session.id,
+        "statuscode" : 200
+    }))
+    return json.dumps({
+        "sessionId" : session.id,
+        "statuscode" : 200
+    })
 
 
 @router.post("/resume")
 async def resume_session(tabdata:TabData):
-    update_session('pause', (0, tabdata.duration))
+    # use session id
+    update_session()
     return 200
 
 
 @router.post("/end")
 async def end_session():
-    # storeSession()
+    # updateSession()
     return None
 
 @router.get("/{sessionid}")
