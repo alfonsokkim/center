@@ -65,13 +65,15 @@ export const sendTabTime = async (url: string, elapsedSeconds: number, sessionId
   }
 };
 
-export const postSessionEnd = async (sessionId: string) => {
+export const postSessionEnd = async (sessionId: string, totalTimeElapsed: number) => {
   try {
     const response = await fetch(`${BASE_URL}/session/end`, { 
       method: 'POST',
       headers: {
-        'sessionId': sessionId // INJECTED HEADER
-      }
+        'Content-Type': 'application/json',
+        'sessionId': sessionId 
+      },
+      body: JSON.stringify({ totalTimeElapsed })
     });
 
     if (!response.ok) throw new Error(`End session sync failed: ${response.status}`);

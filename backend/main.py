@@ -3,7 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from contextlib import asynccontextmanager
 
-from routes import score, session, analytics
+from routes import session, event_routes
 from db.database import init_db
 
 
@@ -31,8 +31,6 @@ app.add_middleware(
 )
 
 
-app.include_router(score.router, prefix="/score")
-app.include_router(analytics.router, prefix="/analytics")
 app.include_router(session.router, prefix="/session")
 
 

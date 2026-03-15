@@ -1,0 +1,188 @@
+/* ── Session view wrapper ────────────────────────────── */
+.view-container.session-mode {
+  position: relative;
+  width: 350px;
+  height: 560px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  overflow: hidden;
+  background: linear-gradient(175deg, #2e3a9e 0%, #1e2878 25%, #151f70 55%, #0e1560 100%);
+  color: #fff;
+  font-family: inherit;
+  justify-content: flex-start;
+}
+
+/* ── Header ──────────────────────────────────────────── */
+.session-mode header {
+  padding: 16px 20px 0;
+  z-index: 1;
+  width: 100%;
+}
+.session-mode header h3 {
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  margin: 0;
+}
+.badge {
+  background: #4dffa0;
+  color: #0e1560;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  padding: 2px 8px;
+  border-radius: 99px;
+  margin-left: 6px;
+}
+
+/* ── Content ─────────────────────────────────────────── */
+.session-mode .content {
+  padding: 0 16px 16px;
+  width: 100%;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  flex: 1;
+}
+
+/* ── Timer ───────────────────────────────────────────── */
+.timer-display-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-top: 12px;
+}
+.main-timer {
+  background: #fff;
+  color: #111;
+  border-radius: 12px;
+  font-size: 28px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  padding: 10px 24px;
+  text-align: center;
+  min-width: 160px;
+  margin: 0;
+}
+
+/* ── Current task ────────────────────────────────────── */
+.current-task-display {
+  background: rgba(14,21,96,0.7);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 14px;
+  padding: 10px 14px;
+  width: 100%;
+  margin-top: 10px;
+  box-sizing: border-box;
+}
+.current-task-display h4 {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  color: rgba(255,255,255,0.5);
+  margin: 0 0 3px;
+  text-transform: uppercase;
+}
+.current-task-display p {
+  font-size: 13px;
+  font-weight: 700;
+  margin: 0;
+}
+
+/* ── Tab nav ─────────────────────────────────────────── */
+.session-mode .tab-nav {
+  display: flex;
+  background: #1a2580;
+  border-radius: 50px;
+  padding: 4px;
+  width: 100%;
+  border-bottom: none;
+}
+.session-mode .tab-nav button {
+  flex: 1;
+  border: none;
+  border-radius: 50px;
+  padding: 10px 0;
+  font-weight: 700;
+  font-size: 13px;
+  letter-spacing: 0.06em;
+  cursor: pointer;
+  background: transparent;
+  color: rgba(255,255,255,0.5);
+  transition: background 0.2s, color 0.2s;
+}
+.session-mode .tab-nav button.active {
+  background: #7fb8f5;
+  color: #0e1560;
+}
+
+/* ── Tab content ─────────────────────────────────────── */
+.tab-content { margin-top: auto; }
+
+/* ── Break setup ─────────────────────────────────────── */
+.break-setup { display: flex; flex-direction: column; gap: 8px; }
+.break-setup > p {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  color: rgba(255,255,255,0.6);
+  text-transform: uppercase;
+  margin: 0;
+}
+.session-mode .duration-picker { display: flex; gap: 10px; }
+.session-mode .time-unit { display: flex; gap: 8px; flex: 1; }
+.session-mode .time-unit input {
+  flex: 1;
+  background: #fff;
+  color: #333;
+  border: none;
+  border-radius: 12px;
+  padding: 12px 16px;
+  font-size: 15px;
+  font-weight: 700;
+  text-align: center;
+  outline: none;
+  font-family: inherit;
+}
+.session-mode .time-unit span { display: none; }
+
+.break-btn {
+  background: #F5C518;
+  color: #0e1560;
+  border: none;
+  border-radius: 12px;
+  font-weight: 800;
+  font-size: 13px;
+  letter-spacing: 0.08em;
+  cursor: pointer;
+  padding: 12px 20px;
+  width: 80px;
+  transition: opacity 0.15s;
+}
+.break-btn:hover    { opacity: 0.9; }
+.break-btn:disabled { opacity: 0.45; cursor: not-allowed; }
+
+/* ── End confirmation ────────────────────────────────── */
+.end-confirmation { display: flex; flex-direction: column; gap: 8px; }
+.end-confirmation > p {
+  font-size: 12px;
+  color: rgba(255,255,255,0.6);
+  text-align: center;
+  margin: 0;
+}
+.end-btn {
+  background: #F5C518;
+  color: #0e1560;
+  border: none;
+  border-radius: 12px;
+  font-weight: 800;
+  font-size: 15px;
+  letter-spacing: 0.08em;
+  cursor: pointer;
+  padding: 14px 0;
+  width: 100%;
+  transition: opacity 0.15s, transform 0.1s;
+}
+.end-btn:hover { opacity: 0.9; transform: translateY(-1px); }

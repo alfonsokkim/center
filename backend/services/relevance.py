@@ -5,16 +5,19 @@ import numpy as np
 import math
 from urllib.parse import urlparse
 
-from services.trusted_domains import (
+from .trusted_domains import (
     build_field_embeddings,
     trusted_domain_score,
 )
 
 # INITIALISATION
 # Models and field embeddings are built once at import time.
+import os
 
-embedding_model = SentenceTransformer("llm/all-MiniLM-L6-v2")
-field_embeddings = build_field_embeddings(embedding_model)
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+MODEL_PATH = os.path.join(BASE_DIR, "..", "llm", "all-MiniLM-L6-v2")
+
+embedding_model = SentenceTransformer(MODEL_PATH)
 
 HEADERS = {
     "User-Agent": (
@@ -135,7 +138,7 @@ def apply_penalties(score: float, url: str, page_text: str) -> float:
 
 # PUBLIC API
 
-def relevance_score_for_url(url: str, goal: str) -> dict:
+async def relevance_score_for_url(url: str, goal: str) -> float:
     simplified = simplify_goal(goal)
     goal_embedding = embedding_model.encode(simplified)
 
@@ -159,4 +162,4 @@ def relevance_score_for_url(url: str, goal: str) -> dict:
     else:
         final = c_score
 
-    return {"url": url, "goal": goal, "relevancy": round(final, 2)}
+    return round(final, 2)

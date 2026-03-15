@@ -10,3 +10,10 @@ export interface SessionData {
   url?: string;
   workedSeconds?: number;
 }
+
+export interface SessionHistory {
+  id: string;
+  task: string;
+  durationSeconds: number;
+  relevanceScore: number;
+}
