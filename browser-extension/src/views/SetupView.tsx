@@ -142,13 +142,13 @@ export default function SetupView({ onStart }: SetupProps) {
           className={tab === 'new' ? 'active' : ''}
           onClick={() => setTab('new')}
         >
-          New Session
+          NEW SESSION
         </button>
         <button
           className={tab === 'history' ? 'active' : ''}
           onClick={() => setTab('history')}
         >
-          History
+          HISTORY
         </button>
       </nav>
 
@@ -170,7 +170,7 @@ export default function SetupView({ onStart }: SetupProps) {
                   checked={sessionType === 'unlimited'}
                   onChange={() => setSessionType('unlimited')}
                 />
-                Unlimited
+                UNTIMED
               </label>
               <label className="radio-label">
                 <input
@@ -178,7 +178,7 @@ export default function SetupView({ onStart }: SetupProps) {
                   checked={sessionType === 'timed'}
                   onChange={() => setSessionType('timed')}
                 />
-                Timed
+                TIMED
               </label>
             </div>
 
