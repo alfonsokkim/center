@@ -15,8 +15,9 @@ type OrbitPlanet = {
   angle: number
   speed: number
   size: number
-  label: string
-  details: [string, string, string]
+  pageTitle: string
+  url: string
+  relevanceScore: number
 }
 
 type OrbitRing = {
@@ -69,12 +70,9 @@ function createOrbitPlanets() {
       angle: -2.72,
       speed: 1.1,
       size: 15,
-      label: "YouTube",
-      details: [
-        "Weekly uploads driving strong engagement",
-        "Short-form clips boosting channel reach",
-        "Audience retention up across tutorials",
-      ],
+      pageTitle: "YouTube Studio Dashboard",
+      url: "studio.youtube.com",
+      relevanceScore: 88,
     },
     {
       id: "planet-2",
@@ -83,12 +81,9 @@ function createOrbitPlanets() {
       angle: -0.5,
       speed: 1.1,
       size: 12.5,
-      label: "Instagram",
-      details: [
-        "Reels are outperforming static posts",
-        "Story taps increased after campaign launch",
-        "Follower growth is trending steadily upward",
-      ],
+      pageTitle: "Instagram Analytics",
+      url: "business.instagram.com",
+      relevanceScore: 74,
     },
     {
       id: "planet-3",
@@ -97,12 +92,9 @@ function createOrbitPlanets() {
       angle: 1.18,
       speed: 1.1,
       size: 10.5,
-      label: "TikTok",
-      details: [
-        "High replay rate on recent explainer videos",
-        "Comments are clustering around study tips",
-        "Posting cadence is helping discoverability",
-      ],
+      pageTitle: "TikTok Creative Center",
+      url: "ads.tiktok.com",
+      relevanceScore: 61,
     },
     {
       id: "planet-4",
@@ -111,12 +103,9 @@ function createOrbitPlanets() {
       angle: -1.78,
       speed: 0.55,
       size: 11.5,
-      label: "Discord",
-      details: [
-        "Community activity spikes after live sessions",
-        "Pinned resources are the most opened items",
-        "Support threads are resolving faster this week",
-      ],
+      pageTitle: "Discord Study Group",
+      url: "discord.com/channels",
+      relevanceScore: 42,
     },
     {
       id: "planet-5",
@@ -125,12 +114,9 @@ function createOrbitPlanets() {
       angle: 0.5,
       speed: 0.55,
       size: 12.5,
-      label: "LinkedIn",
-      details: [
-        "Professional updates are earning more saves",
-        "Career-focused posts have the best click-through",
-        "Network reach expanded after alumni reshares",
-      ],
+      pageTitle: "LinkedIn Feed",
+      url: "linkedin.com/feed",
+      relevanceScore: 31,
     },
     {
       id: "planet-6",
@@ -139,16 +125,25 @@ function createOrbitPlanets() {
       angle: 2.22,
       speed: 0.55,
       size: 10,
-      label: "Spotify",
-      details: [
-        "Focus playlists are the most replayed assets",
-        "Morning listening sessions are trending highest",
-        "New themed drops are improving completion rate",
-      ],
+      pageTitle: "Spotify Focus Playlist",
+      url: "open.spotify.com",
+      relevanceScore: 82,
     },
   ]
 
   return planets
+}
+
+function scoreColor(score: number) {
+  if (score >= 70) return "#4dffa0"
+  if (score >= 45) return "#f5c518"
+  return "#ff6b6b"
+}
+
+function scoreStatus(score: number) {
+  if (score >= 70) return "Relevant"
+  if (score >= 45) return "Borderline"
+  return "Distracting"
 }
 
 function createOrbitRings() {
@@ -317,7 +312,7 @@ export default function Dashboard() {
               }}
             >
               <img
-                alt={planet.label}
+                alt={planet.pageTitle}
                 className="dashboard__planet"
                 onBlur={() => {
                   schedulePlanetModalClose(planet.id)
@@ -352,12 +347,51 @@ export default function Dashboard() {
                   schedulePlanetModalClose(planet.id)
                 }}
               >
-                <p className="dashboard__planet-modal-title">{planet.label}</p>
-                <ul className="dashboard__planet-modal-list">
-                  {planet.details.map((detail) => (
-                    <li key={detail}>{detail}</li>
-                  ))}
-                </ul>
+                <button
+                  aria-label="Close details"
+                  className="dashboard__planet-modal-close"
+                  onClick={() => {
+                    clearCloseTimeout()
+                    setActivePlanetId(null)
+                  }}
+                  type="button"
+                >
+                  ×
+                </button>
+                <p className="dashboard__planet-modal-title">{planet.pageTitle}</p>
+                <p className="dashboard__planet-modal-url">{planet.url}</p>
+                <div className="dashboard__planet-modal-section">
+                  <div className="dashboard__planet-modal-row">
+                    <span>Relevance</span>
+                    <strong
+                      className="dashboard__planet-modal-score"
+                      style={{ color: scoreColor(planet.relevanceScore) }}
+                    >
+                      {planet.relevanceScore}%
+                    </strong>
+                  </div>
+                  <div className="dashboard__planet-modal-bar-bg">
+                    <div
+                      className="dashboard__planet-modal-bar-fill"
+                      style={{
+                        width: `${planet.relevanceScore}%`,
+                        background: scoreColor(planet.relevanceScore),
+                      }}
+                    />
+                  </div>
+                </div>
+                <div className="dashboard__planet-modal-row dashboard__planet-modal-row--status">
+                  <span>Status</span>
+                  <span
+                    className="dashboard__planet-modal-badge"
+                    style={{
+                      color: scoreColor(planet.relevanceScore),
+                      backgroundColor: `${scoreColor(planet.relevanceScore)}22`,
+                    }}
+                  >
+                    {scoreStatus(planet.relevanceScore)}
+                  </span>
+                </div>
               </div>
             </div>
           )
