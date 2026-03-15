@@ -1,4 +1,4 @@
-from db.storage import get_event_from_url, update_event, get_session
+from db.storage import get_event_from_url, update_event, get_session, create_event
 from db.schema import UpdateTabEventSchema
 
 # note that we need to 
@@ -21,3 +21,28 @@ def handlePrevTab(session_id: str, url: str, duration: float):
         raise LookupError("Tab cannot be found")
 
     update_event(event.id, UpdateTabEventSchema(duration=duration))
+
+async def handleSwitchTab(session_id: str, url: str, title: str) -> float:
+    if not url:
+        raise ValueError("URL cannot be empty")
+    
+    if not session_id:
+        raise ValueError("Session ID cannot be empty")
+
+    session = get_session(session_id)
+    if not session:
+        raise LookupError("Session not found") 
+    
+    event = get_event_from_url(url, session_id)
+
+    if not event:
+        goal = get_session(session_id).goal
+        relevance = relevance_score_for_url(url, goal)
+        create_event(session_id, url, title, relevance)
+        return relevance
+    
+    return event.relevance
+    
+
+    
+

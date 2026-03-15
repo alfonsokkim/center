@@ -2,6 +2,7 @@ from db.database import SessionLocal
 from db.models import Session, TabEvent
 from db.schema import UpdateSessionSchema, UpdateTabEventSchema
 from typing import Optional, List
+from services.relevance import relevance_score_for_url
 
 # Session functions
 # Called when timer starts for session
@@ -44,12 +45,14 @@ def update_session(session_id: str, updates: UpdateSessionSchema) -> Optional[Se
 
 # Tab event
 # called during on_click
-def create_event(session_id: str, url: str) -> TabEvent:
+def create_event(session_id: str, url: str, title: str, relevance: float) -> TabEvent:
     db = SessionLocal()
     try:
         event = TabEvent(
             session_id=session_id,
             url=url,
+            title=title,
+            relevance=relevance
         )
         db.add(event)
         db.commit()
