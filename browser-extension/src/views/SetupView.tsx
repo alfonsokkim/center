@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import type { SessionData } from '../types';
+import './SetupView.css';
 
 interface SetupProps {
   onStart: (data: Omit<SessionData, 'status'>) => void;
@@ -12,39 +13,52 @@ export default function SetupView({ onStart }: SetupProps) {
   const [hours, setHours] = useState<number | "">("");
   const [minutes, setMinutes] = useState<number | "">("");
 
-  // Validation logic
-  // This ensures that if it's "timed", at least one box has a number greater than 0
   const hasTime = sessionType === 'unlimited' || (Number(hours) > 0 || Number(minutes) > 0);
-
-  // Your button stays disabled if the task is empty OR the time isn't valid
   const isStartDisabled = !task.trim() || !hasTime;
 
   const handleTimeChange = (val: string, setter: (n: number | "") => void, max: number) => {
-    // If the input is empty (backspaced), set state to empty string
     if (val === "") {
       setter("");
       return;
     }
-
     const num = parseInt(val, 10);
-
-    // If it's a valid number, clamp it between 0 and your max
     if (!isNaN(num)) {
       const clamped = Math.min(max, Math.max(0, num));
       setter(clamped);
     }
   };
 
-  const handleStart = () => {
-  onStart({
-    task: task.trim(),
-    sessionType,
-    // If it's "" (empty), treat it as 0 for the API/Storage
-    hours: sessionType === 'timed' ? (hours || 0) : 0,
-    minutes: sessionType === 'timed' ? (minutes || 0) : 0,
-    startTime: new Date().toISOString(),
-  });
-};
+  const handleStart = async () => {
+    // 1. Grab both the URL and the Title from the active tab
+    const [tabInfo] = await chrome.tabs.query({ active: true, currentWindow: true });
+    const currentUrl = tabInfo?.url || "";
+    const currentTitle = tabInfo?.title || ""; 
+
+    const sessionPayload: Omit<SessionData, 'status'> = {
+      task: task.trim(),
+      sessionType,
+      hours: sessionType === 'timed' ? (Number(hours) || 0) : 0,
+      minutes: sessionType === 'timed' ? (Number(minutes) || 0) : 0,
+      startTime: new Date().toISOString(),
+      url: currentUrl
+    };
+
+    // 2. Wake up the Background Script and pass all the necessary data
+    chrome.runtime.sendMessage({ 
+      action: "START_SESSION", 
+      url: currentUrl,
+      title: currentTitle,
+      goal: task.trim() // Send the goal text here!
+    }, (response) => {
+      // 3. Switch the UI to the active session view ONLY if the background script succeeded
+      if (response && response.success) {
+        onStart(sessionPayload);
+      } else {
+        console.error("Failed to start session:", response?.error);
+        // Optional: You could add a state here to show a "Failed to connect to server" error message to the user
+      }
+    });
+  };
 
   return (
     <div className="view-container">
@@ -70,11 +84,12 @@ export default function SetupView({ onStart }: SetupProps) {
       <div className="content">
         {tab === 'new' ? (
           <div className="setup-screen">
-            <input 
+            <p>What are you working on? (Be descriptive!)</p>
+            <textarea 
               className="task-input"
               value={task} 
               onChange={e => setTask(e.target.value)} 
-              placeholder="What are you working on?" 
+              placeholder="Example: I am working on my UNSW COMP1511 linked lists assignment" 
             />
 
             <div className="radio-group">

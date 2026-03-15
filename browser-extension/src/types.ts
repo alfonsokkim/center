@@ -7,4 +7,6 @@ export interface SessionData {
   hours: number;
   minutes: number;
   startTime?: string;
+  url?: string;
+  workedSeconds?: number;
 }
