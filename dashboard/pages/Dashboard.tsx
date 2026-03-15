@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react"
+import { getRecentEvents, type RecentEvent } from "../src/api"
 
 type DotStar = {
   id: string
@@ -6,17 +7,6 @@ type DotStar = {
   top: string
   size: number
   opacity: number
-}
-
-type OrbitPlanet = {
-  id: string
-  asset: string
-  radius: number
-  angle: number
-  speed: number
-  size: number
-  label: string
-  details: [string, string, string]
 }
 
 type OrbitRing = {
@@ -38,7 +28,7 @@ function createStars<T extends DotStar>(
   return Array.from({ length: count }, (_, index) => createStar(index, random))
 }
 
-function createOrbitPlanets() {
+function createOrbitPlanets(events?: RecentEvent[]) {
   const planetAssets = [
     "/assets/purple-planet.png",
     "/assets/light-blue-planet.png",
@@ -61,94 +51,107 @@ function createOrbitPlanets() {
     shuffled[swapIndex] = current
   }
 
-  const planets: OrbitPlanet[] = [
+  const fallbackEvents: RecentEvent[] = [
     {
       id: "planet-1",
-      asset: shuffled[0],
-      radius: 27,
-      angle: -2.72,
-      speed: 1.1,
-      size: 15,
-      label: "YouTube",
-      details: [
-        "Weekly uploads driving strong engagement",
-        "Short-form clips boosting channel reach",
-        "Audience retention up across tutorials",
-      ],
+      sessionId: "demo",
+      title: "YouTube Studio Dashboard",
+      url: "studio.youtube.com",
+      relevanceScore: 88,
+      duration: 1860,
     },
     {
       id: "planet-2",
-      asset: shuffled[1],
-      radius: 27,
-      angle: -0.5,
-      speed: 1.1,
-      size: 12.5,
-      label: "Instagram",
-      details: [
-        "Reels are outperforming static posts",
-        "Story taps increased after campaign launch",
-        "Follower growth is trending steadily upward",
-      ],
+      sessionId: "demo",
+      title: "Instagram Analytics",
+      url: "business.instagram.com",
+      relevanceScore: 74,
+      duration: 1220,
     },
     {
       id: "planet-3",
-      asset: shuffled[2],
-      radius: 27,
-      angle: 1.18,
-      speed: 1.1,
-      size: 10.5,
-      label: "TikTok",
-      details: [
-        "High replay rate on recent explainer videos",
-        "Comments are clustering around study tips",
-        "Posting cadence is helping discoverability",
-      ],
+      sessionId: "demo",
+      title: "TikTok Creative Center",
+      url: "ads.tiktok.com",
+      relevanceScore: 61,
+      duration: 860,
     },
     {
       id: "planet-4",
-      asset: shuffled[3],
-      radius: 47,
-      angle: -1.78,
-      speed: 0.55,
-      size: 11.5,
-      label: "Discord",
-      details: [
-        "Community activity spikes after live sessions",
-        "Pinned resources are the most opened items",
-        "Support threads are resolving faster this week",
-      ],
+      sessionId: "demo",
+      title: "Discord Study Group",
+      url: "discord.com/channels",
+      relevanceScore: 42,
+      duration: 540,
     },
     {
       id: "planet-5",
-      asset: shuffled[4],
-      radius: 47,
-      angle: 0.5,
-      speed: 0.55,
-      size: 12.5,
-      label: "LinkedIn",
-      details: [
-        "Professional updates are earning more saves",
-        "Career-focused posts have the best click-through",
-        "Network reach expanded after alumni reshares",
-      ],
+      sessionId: "demo",
+      title: "LinkedIn Feed",
+      url: "linkedin.com/feed",
+      relevanceScore: 31,
+      duration: 305,
     },
     {
       id: "planet-6",
-      asset: shuffled[5],
-      radius: 47,
-      angle: 2.22,
-      speed: 0.55,
-      size: 10,
-      label: "Spotify",
-      details: [
-        "Focus playlists are the most replayed assets",
-        "Morning listening sessions are trending highest",
-        "New themed drops are improving completion rate",
-      ],
+      sessionId: "demo",
+      title: "Spotify Focus Playlist",
+      url: "open.spotify.com",
+      relevanceScore: 82,
+      duration: 1440,
     },
   ]
 
-  return planets
+  const orbitLayout = [
+    { radius: 27, angle: -2.72, speed: 1.1, size: 15 },
+    { radius: 27, angle: -0.5, speed: 1.1, size: 12.5 },
+    { radius: 27, angle: 1.18, speed: 1.1, size: 10.5 },
+    { radius: 47, angle: -1.78, speed: 0.55, size: 11.5 },
+    { radius: 47, angle: 0.5, speed: 0.55, size: 12.5 },
+    { radius: 47, angle: 2.22, speed: 0.55, size: 10 },
+  ]
+
+  return orbitLayout.map((layout, index) => {
+    const event = events?.[index] ?? fallbackEvents[index]
+    return {
+      id: event.id,
+      asset: shuffled[index],
+      radius: layout.radius,
+      angle: layout.angle,
+      speed: layout.speed,
+      size: layout.size,
+      pageTitle: event.title,
+      url: event.url,
+      relevanceScore: Math.round(event.relevanceScore),
+      duration: event.duration,
+    }
+  })
+}
+
+function scoreColor(score: number) {
+  if (score >= 70) return "#4dffa0"
+  if (score >= 45) return "#f5c518"
+  return "#ff6b6b"
+}
+
+function scoreStatus(score: number) {
+  if (score >= 70) return "Relevant"
+  if (score >= 45) return "Borderline"
+  return "Distracting"
+}
+
+function formatDuration(seconds: number) {
+  if (seconds < 60) return `${Math.round(seconds)}s`
+
+  const minutes = Math.floor(seconds / 60)
+  const remainder = Math.round(seconds % 60)
+
+  if (minutes < 60) {
+    return `${minutes}m ${remainder.toString().padStart(2, "0")}s`
+  }
+
+  const hours = Math.floor(minutes / 60)
+  return `${hours}h ${minutes % 60}m`
 }
 
 function createOrbitRings() {
@@ -163,6 +166,7 @@ function createOrbitRings() {
 export default function Dashboard() {
   const [orbitProgress, setOrbitProgress] = useState(0)
   const [activePlanetId, setActivePlanetId] = useState<string | null>(null)
+  const [backendEvents, setBackendEvents] = useState<RecentEvent[]>([])
   const orbitVelocityRef = useRef(0)
   const closeTimeoutRef = useRef<number | null>(null)
 
@@ -191,8 +195,29 @@ export default function Dashboard() {
     []
   )
 
-  const orbitPlanets = useMemo(() => createOrbitPlanets(), [])
+  const orbitPlanets = useMemo(() => createOrbitPlanets(backendEvents), [backendEvents])
   const orbitRings = useMemo(() => createOrbitRings(), [])
+
+  useEffect(() => {
+    let cancelled = false
+
+    const loadRecentEvents = async () => {
+      try {
+        const payload = await getRecentEvents(6)
+        if (!cancelled) {
+          setBackendEvents(payload.events)
+        }
+      } catch (error) {
+        console.error("Failed to load recent dashboard events:", error)
+      }
+    }
+
+    void loadRecentEvents()
+
+    return () => {
+      cancelled = true
+    }
+  }, [])
 
   useEffect(() => {
     let frameId = 0
@@ -317,7 +342,7 @@ export default function Dashboard() {
               }}
             >
               <img
-                alt={planet.label}
+                alt={planet.pageTitle}
                 className="dashboard__planet"
                 onBlur={() => {
                   schedulePlanetModalClose(planet.id)
@@ -352,12 +377,57 @@ export default function Dashboard() {
                   schedulePlanetModalClose(planet.id)
                 }}
               >
-                <p className="dashboard__planet-modal-title">{planet.label}</p>
-                <ul className="dashboard__planet-modal-list">
-                  {planet.details.map((detail) => (
-                    <li key={detail}>{detail}</li>
-                  ))}
-                </ul>
+                <button
+                  aria-label="Close details"
+                  className="dashboard__planet-modal-close"
+                  onClick={() => {
+                    clearCloseTimeout()
+                    setActivePlanetId(null)
+                  }}
+                  type="button"
+                >
+                  ×
+                </button>
+                <p className="dashboard__planet-modal-title">{planet.pageTitle}</p>
+                <p className="dashboard__planet-modal-url">{planet.url}</p>
+                <div className="dashboard__planet-modal-section">
+                  <div className="dashboard__planet-modal-row">
+                    <span>Relevance</span>
+                    <strong
+                      className="dashboard__planet-modal-score"
+                      style={{ color: scoreColor(planet.relevanceScore) }}
+                    >
+                      {planet.relevanceScore}%
+                    </strong>
+                  </div>
+                  <div className="dashboard__planet-modal-bar-bg">
+                    <div
+                      className="dashboard__planet-modal-bar-fill"
+                      style={{
+                        width: `${planet.relevanceScore}%`,
+                        background: scoreColor(planet.relevanceScore),
+                      }}
+                    />
+                  </div>
+                </div>
+                <div className="dashboard__planet-modal-row">
+                  <span>Duration</span>
+                  <strong className="dashboard__planet-modal-duration">
+                    {formatDuration(planet.duration)}
+                  </strong>
+                </div>
+                <div className="dashboard__planet-modal-row dashboard__planet-modal-row--status">
+                  <span>Status</span>
+                  <span
+                    className="dashboard__planet-modal-badge"
+                    style={{
+                      color: scoreColor(planet.relevanceScore),
+                      backgroundColor: `${scoreColor(planet.relevanceScore)}22`,
+                    }}
+                  >
+                    {scoreStatus(planet.relevanceScore)}
+                  </span>
+                </div>
               </div>
             </div>
           )
