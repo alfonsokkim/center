@@ -21,7 +21,7 @@ async def end_session():
     # storeSession()
     return None
 
-@router.get()
+@router.get("/{sessionid}")
 async def get_stats():
     # get stats of current study session
     # get session id from session object retrieved in start_session
@@ -35,7 +35,7 @@ async def log_distraction(tabdata:TabData):
     return None
     
 
-@router.delete()
+@router.delete("/{sessionid}")
 async def reset_session():
     # save stats locally
     # reset session data

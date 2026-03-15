@@ -13,7 +13,7 @@ from services.trusted_domains import (
 # INITIALISATION
 # Models and field embeddings are built once at import time.
 
-embedding_model = SentenceTransformer("../llm/all-MiniLM-L6-v2")
+embedding_model = SentenceTransformer("llm/all-MiniLM-L6-v2")
 field_embeddings = build_field_embeddings(embedding_model)
 
 HEADERS = {
