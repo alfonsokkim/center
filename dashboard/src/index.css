@@ -81,11 +81,14 @@ body {
   aspect-ratio: 1;
   display: block;
   object-fit: contain;
-  filter: drop-shadow(0 14px 22px rgba(9, 18, 84, 0.26));
+  filter:
+    brightness(1)
+    saturate(1)
+    drop-shadow(0 14px 22px rgba(9, 18, 84, 0.26));
   cursor: pointer;
   transition:
-    filter 180ms ease,
-    opacity 180ms ease;
+    filter 280ms ease-in-out,
+    opacity 280ms ease-in-out;
 }
 
 .dashboard__planet-wrap:hover .dashboard__planet,
@@ -115,6 +118,7 @@ body {
     opacity 180ms ease,
     transform 180ms ease;
   pointer-events: none;
+  visibility: hidden;
   backdrop-filter: blur(10px);
   z-index: 4;
 }
@@ -122,6 +126,8 @@ body {
 .dashboard__planet-modal--visible {
   opacity: 1;
   transform: translate(-50%, 0);
+  pointer-events: auto;
+  visibility: visible;
 }
 
 .dashboard__planet-modal--below {
