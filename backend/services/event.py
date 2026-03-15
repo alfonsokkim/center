@@ -1,5 +1,6 @@
 from db.storage import get_event_from_url, update_event, get_session, create_event
 from db.schema import UpdateTabEventSchema
+from services.relevance import relevance_score_for_url
 
 # note that we need to 
 def handlePrevTab(session_id: str, url: str, duration: float):
@@ -20,7 +21,7 @@ def handlePrevTab(session_id: str, url: str, duration: float):
         # throw error if it does not exist in storage
         raise LookupError("Tab cannot be found")
 
-    update_event(event.id, UpdateTabEventSchema(duration=duration))
+    update_event(event.id, UpdateTabEventSchema(time_spent=duration))
 
 async def handleSwitchTab(session_id: str, url: str, title: str) -> float:
     if not url:
@@ -41,7 +42,7 @@ async def handleSwitchTab(session_id: str, url: str, title: str) -> float:
         create_event(session_id, url, title, relevance)
         return relevance
     
-    return event.relevance
+    return event.relevance_score
     
 
     

@@ -55,16 +55,16 @@ class UrlBody(BaseModel):
 
 class TabTimeBody(BaseModel):
     url: str
-    elapsedSeconds: int
+    duration: int
 
 
-@router.post("/session/url")
-async def new_tab(body: UrlBody, sessionId: str = Header(...)):
+@router.post("/url")
+async def new_tab(body: UrlBody, sessionId: Annotated[str | None, Header(alias="sessionId")] = None):
     relevance = await handleSwitchTab(sessionId, body.url, body.title)
     return {"score": relevance}
 
 
-@router.post("/session/tabtime")
-async def tab_time(body: TabTimeBody, sessionId: str = Header(...)):
-    handlePrevTab(sessionId, body.url, body.elapsedSeconds)
-    return
+@router.post("/tabtime")
+async def tab_time(body: TabTimeBody, sessionId: Annotated[str | None, Header(alias="sessionId")] = None):
+    handlePrevTab(sessionId, body.url, body.duration)
+    return None
