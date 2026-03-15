@@ -1,27 +1,26 @@
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, Header, HTTPException
 from pydantic import BaseModel
 from services.event import handlePrevTab, handleSwitchTab
 
 router = APIRouter()
 
-
-class StoreDurationBody(BaseModel):
-    sessionId: str
-    url: str
-    duration: float
-
-
-class SwitchTabBody(BaseModel):
-    sessionId: str
+class UrlBody(BaseModel):
     url: str
     title: str
 
 
-@router.post("/store-duration")
-async def store_duration(body: StoreDurationBody):
-    handlePrevTab(body.sessionId, body.url, body.duration)
+class TabTimeBody(BaseModel):
+    url: str
+    elapsedSeconds: int
 
-@router.post("/switch-tab")
-async def switch_tab(body: SwitchTabBody):
-    relevance = await handleSwitchTab(body.sessionId, body.url, body.title)
-    return relevance
+
+@router.post("/session/url")
+async def new_tab(body: UrlBody, sessionId: str = Header(...)):
+    relevance = await handleSwitchTab(sessionId, body.url, body.title)
+    return {"score": relevance}
+
+
+@router.post("/session/tabtime")
+async def tab_time(body: TabimeBody, sessionId: str = Header(...)):
+    handlePrevTab(sessionId, body.url, body.elapsedSeconds)
+    return
