@@ -1,55 +1,45 @@
-import json
-from fastapi import APIRouter;
-from routes.body_types.session_types import TabData, SessionStartData
+from typing import Annotated
+from fastapi import APIRouter, Header;
+from routes.body_types.session_types import *
 from db.storage import *
 from services.relevance import relevance_score_for_url
+from services.session_helper import *
 router = APIRouter()
 
 
 @router.post("/goal")
 async def start_session(sessionStart:SessionStartData):
-    print(sessionStart.goal)
     session = create_session(sessionStart.goal)
-    print(session.id)
     # return session.id
-    print(json.dumps({
+    return {
         "sessionId" : session.id,
         "statuscode" : 200
-    }))
-    return json.dumps({
-        "sessionId" : session.id,
-        "statuscode" : 200
-    })
+    }
+
+"""
+@router.post("/url")
+async def get_url(urldata:UrlData, sessionId:Annotated[str | None, Header()] = None):
+    print(urldata.url)
+    print(urldata.title)
+    print(sessionId)
+    urldata.url
+    urldata.title
+    return {
+        "score":0
+    }
 
 
-@router.post("/resume")
-async def resume_session(tabdata:TabData):
-    # use session id
-    update_session()
-    return 200
-
+@router.post("/tabtime")
+async def end_session(tabdata:TabData, sessionId:Annotated[str | None, Header()] = None):
+    print(tabdata.url)
+    print(tabdata.duration)
+    print(sessionId)
+    
+    return None
+"""
 
 @router.post("/end")
-async def end_session():
-    # updateSession()
-    return None
-
-@router.get("/{sessionid}")
-async def get_stats():
-    # get stats of current study session
-    # get session id from session object retrieved in start_session
-    get_events()
-    return None
-
-@router.post("/distraction")
-async def log_distraction(tabdata:TabData):
-    # duration, url
-    out = relevance_score_for_url(tabdata.url)#, get_goal)
-    return None
-    
-
-@router.delete("/{sessionid}")
-async def reset_session():
+async def reset_session(sessionEnd:SessionEndData, sessionId:Annotated[str | None, Header()] = None):
     # save stats locally
-    # reset session data
+    final_update_session(sessionId=sessionId, duration=sessionEnd.duration)    
     return None
