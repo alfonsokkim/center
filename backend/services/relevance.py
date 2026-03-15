@@ -5,16 +5,19 @@ import numpy as np
 import math
 from urllib.parse import urlparse
 
-from trusted_domains import (
+from .trusted_domains import (
     build_field_embeddings,
     trusted_domain_score,
 )
 
 # INITIALISATION
 # Models and field embeddings are built once at import time.
+import os
 
-embedding_model = SentenceTransformer("../llm/all-MiniLM-L6-v2")
-field_embeddings = build_field_embeddings(embedding_model)
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+MODEL_PATH = os.path.join(BASE_DIR, "..", "llm", "all-MiniLM-L6-v2")
+
+embedding_model = SentenceTransformer(MODEL_PATH)
 
 HEADERS = {
     "User-Agent": (
