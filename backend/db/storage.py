@@ -2,7 +2,6 @@ from db.database import SessionLocal
 from db.models import Session, TabEvent
 from db.schema import UpdateSessionSchema, UpdateTabEventSchema
 from typing import Optional, List
-from services.relevance import relevance_score_for_url
 
 # Session functions
 # Called when timer starts for session
@@ -45,14 +44,14 @@ def update_session(session_id: str, updates: UpdateSessionSchema) -> Optional[Se
 
 # Tab event
 # called during on_click
-def create_event(session_id: str, url: str, title: str, relevance: float) -> TabEvent:
+def create_event(session_id: str, url: str, title: str, relevance_score: float) -> TabEvent:
     db = SessionLocal()
     try:
         event = TabEvent(
             session_id=session_id,
             url=url,
             title=title,
-            relevance=relevance
+            relevance_score=relevance_score
         )
         db.add(event)
         db.commit()
@@ -92,5 +91,18 @@ def get_events(session_id: str) -> Optional[List[TabEvent]]:
     db = SessionLocal()
     try:
         return db.query(TabEvent).filter(TabEvent.session_id == session_id).all()
+    finally:
+        db.close()
+
+
+def get_recent_events(limit: int = 6) -> List[TabEvent]:
+    db = SessionLocal()
+    try:
+        return (
+            db.query(TabEvent)
+            .order_by(TabEvent.time_spent.desc(), TabEvent.relevance_score.desc(), TabEvent.id.desc())
+            .limit(limit)
+            .all()
+        )
     finally:
         db.close()
