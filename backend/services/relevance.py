@@ -18,6 +18,7 @@ BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 MODEL_PATH = os.path.join(BASE_DIR, "..", "llm", "all-MiniLM-L6-v2")
 
 embedding_model = SentenceTransformer(MODEL_PATH)
+field_embeddings = build_field_embeddings(embedding_model)
 
 HEADERS = {
     "User-Agent": (
@@ -138,7 +139,7 @@ def apply_penalties(score: float, url: str, page_text: str) -> float:
 
 # PUBLIC API
 
-async def relevance_score_for_url(url: str, goal: str) -> float:
+def relevance_score_for_url(url: str, goal: str) -> float:
     simplified = simplify_goal(goal)
     goal_embedding = embedding_model.encode(simplified)
 

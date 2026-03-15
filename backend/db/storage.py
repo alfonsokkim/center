@@ -52,7 +52,8 @@ def create_event(session_id: str, url: str, title: str, relevance: float) -> Tab
             session_id=session_id,
             url=url,
             title=title,
-            relevance=relevance
+            relevance_score=relevance,
+            time_spent = 0.0
         )
         db.add(event)
         db.commit()

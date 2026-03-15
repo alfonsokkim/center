@@ -22,5 +22,6 @@ async def new_tab(body: UrlBody, sessionId: str = Header(...)):
 
 @router.post("/session/tabtime")
 async def tab_time(body: TabTimeBody, sessionId: str = Header(...)):
+
     handlePrevTab(sessionId, body.url, body.elapsedSeconds)
     return

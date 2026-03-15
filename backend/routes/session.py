@@ -1,35 +1,70 @@
-from fastapi import APIRouter;
+from typing import Annotated
+from fastapi import APIRouter, Header;
+from routes.body_types.session_types import *
+from db.storage import *
+from services.relevance import relevance_score_for_url
+from services.session_helper import *
+
+from pydantic import BaseModel
+from services.event import handlePrevTab, handleSwitchTab
+
 router = APIRouter()
 
-@router.post("/start")
-async def start_session():
-    # create storage for url duration
+
+@router.post("/goal")
+async def start_session(sessionStart:SessionStartData):
+    session = create_session(sessionStart.goal)
+    # return session.id
+    return {
+        "sessionId" : session.id,
+        "statuscode" : 200
+    }
+
+"""
+@router.post("/url")
+async def get_url(urldata:UrlData, sessionId:Annotated[str | None, Header()] = None):
+    print(urldata.url)
+    print(urldata.title)
+    print(sessionId)
+    urldata.url
+    urldata.title
+    return {
+        "score":0
+    }
+
+
+@router.post("/tabtime")
+async def end_session(tabdata:TabData, sessionId:Annotated[str | None, Header()] = None):
+    print(tabdata.url)
+    print(tabdata.duration)
+    print(sessionId)
+    
     return None
-
-
-@router.post("/resume")
-async def resume_session():
-    # duration
-    # logs duration paused
-    return None
-
+"""
 
 @router.post("/end")
-async def end_session():
-    # duration
-    # logs duration and calculates final score
+async def reset_session(sessionEnd:SessionEndData, sessionId:Annotated[str | None, Header()] = None):
+    # save stats locally
+    final_update_session(sessionId=sessionId, duration=sessionEnd.duration)    
     return None
 
-# params:
-# sessionId - should be a url param
-@router.get("")
-async def get_stats():
-    # get stats of current study session
-    return None
+class UrlBody(BaseModel):
+    url: str
+    title: str
 
-@router.post("/distraction")
-async def log_distraction():
-    # duration, url
-    # logs distraction
+
+class TabTimeBody(BaseModel):
+    url: str
+    duration: int
+
+
+@router.post("/url")
+async def new_tab(body: UrlBody, sessionId: Annotated[str | None, Header(alias="sessionId")] = None):
+    relevance = await handleSwitchTab(sessionId, body.url, body.title)
+    return {"score": relevance}
+
+
+@router.post("/tabtime")
+async def tab_time(body: TabTimeBody, sessionId: Annotated[str | None, Header(alias="sessionId")] = None):
+    handlePrevTab(sessionId, body.url, body.duration)
     return None
-    
