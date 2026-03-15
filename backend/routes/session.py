@@ -11,10 +11,12 @@ async def start_session(sessionStart:SessionStartData):
     # return session.id
     return 200
 
+
 @router.post("/resume")
 async def resume_session(tabdata:TabData):
     update_session('pause', (0, tabdata.duration))
     return 200
+
 
 @router.post("/end")
 async def end_session():
