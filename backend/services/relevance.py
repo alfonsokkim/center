@@ -135,7 +135,7 @@ def apply_penalties(score: float, url: str, page_text: str) -> float:
 
 # PUBLIC API
 
-def relevance_score_for_url(url: str, goal: str) -> dict:
+async def relevance_score_for_url(url: str, goal: str) -> float:
     simplified = simplify_goal(goal)
     goal_embedding = embedding_model.encode(simplified)
 
@@ -159,4 +159,4 @@ def relevance_score_for_url(url: str, goal: str) -> dict:
     else:
         final = c_score
 
-    return {"url": url, "goal": goal, "relevancy": round(final, 2)}
+    return round(final, 2)
