@@ -5,7 +5,7 @@ import numpy as np
 import math
 from urllib.parse import urlparse
 
-from trusted_domains import (
+from services.trusted_domains import (
     build_field_embeddings,
     trusted_domain_score,
 )

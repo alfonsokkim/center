@@ -1,13 +1,14 @@
 from fastapi import APIRouter;
-from body_types.session_types import TabData, SessionStartData
-from backend.db.storage import *
-from backend.services.relevance import relevance_score_for_url
+from routes.body_types.session_types import TabData, SessionStartData
+from db.storage import *
+from services.relevance import relevance_score_for_url
 router = APIRouter()
 
 @router.post("/start")
 async def start_session(sessionStart:SessionStartData):
     session = create_session(sessionStart.goal)
     # store this session somewhere later
+    # return session.id
     return 200
 
 @router.post("/resume")
