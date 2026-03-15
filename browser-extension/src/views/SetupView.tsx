@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import type { SessionData } from '../types';
-import './SetupView.css'
-import { postSessionGoal } from '../server';
+import './SetupView.css';
 
 interface SetupProps {
   onStart: (data: Omit<SessionData, 'status'>) => void;
@@ -30,8 +29,10 @@ export default function SetupView({ onStart }: SetupProps) {
   };
 
   const handleStart = async () => {
+    // 1. Grab both the URL and the Title from the active tab
     const [tabInfo] = await chrome.tabs.query({ active: true, currentWindow: true });
     const currentUrl = tabInfo?.url || "";
+    const currentTitle = tabInfo?.title || ""; 
 
     const sessionPayload: Omit<SessionData, 'status'> = {
       task: task.trim(),
@@ -42,22 +43,25 @@ export default function SetupView({ onStart }: SetupProps) {
       url: currentUrl
     };
 
-    // 1. Send the goal directly from React (Background doesn't need to know the goal)
-    await postSessionGoal(task.trim());
-
-    // 2. Wake up the Background Script and tell it to start tracking!
+    // 2. Wake up the Background Script and pass all the necessary data
     chrome.runtime.sendMessage({ 
       action: "START_SESSION", 
-      url: currentUrl 
+      url: currentUrl,
+      title: currentTitle,
+      goal: task.trim() // Send the goal text here!
+    }, (response) => {
+      // 3. Switch the UI to the active session view ONLY if the background script succeeded
+      if (response && response.success) {
+        onStart(sessionPayload);
+      } else {
+        console.error("Failed to start session:", response?.error);
+        // Optional: You could add a state here to show a "Failed to connect to server" error message to the user
+      }
     });
-
-    // 3. Switch the UI to the active session view
-    onStart(sessionPayload);
   };
 
   return (
     <div className="view-container">
-      {/* ... rest of your JSX ... */}
       <div>
         <h2>CENTR</h2>
         <h4>Stay focused on your work</h4>
