@@ -4,5 +4,6 @@ body {
   background-color: #ffffff;
   /* Crucial for Extensions: */
   width: 350px;
-  min-height: 400px;
+  height: 560px;
+  overflow: hidden;
 }

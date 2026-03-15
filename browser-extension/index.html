@@ -8,6 +8,16 @@
   <body>
     <div id="root"></div>
 
+    <script>
+      // Chrome API mock for local dev/preview (not included in extension build)
+      if (typeof chrome === 'undefined' || !chrome.storage) {
+        window.chrome = {
+          storage: { local: { get: (k, cb) => cb({}), set: (o, cb) => cb && cb(), remove: (k, cb) => cb && cb() } },
+          runtime: { onMessage: { addListener: () => {}, removeListener: () => {} }, sendMessage: (m, cb) => cb && cb({ success: true }) },
+          tabs: { query: (o, cb) => cb([{ url: 'https://example.com', title: 'Example Page' }]) }
+        };
+      }
+    </script>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

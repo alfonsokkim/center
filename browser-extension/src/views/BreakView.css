@@ -1,0 +1,133 @@
+/* ── Break view wrapper ──────────────────────────────── */
+.view-container.break-mode {
+  position: relative;
+  width: 350px;
+  height: 560px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  background: linear-gradient(175deg, #2e3a9e 0%, #1e2878 25%, #151f70 55%, #0e1560 100%);
+  color: #fff;
+  font-family: inherit;
+}
+
+/* ── Background decorations ──────────────────────────── */
+.break-bg-planets {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+.break-orbit-ring {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 280px;
+  height: 280px;
+  border-radius: 50%;
+  border: 1.5px solid rgba(255,255,255,0.15);
+  transform: translate(-50%, -50%);
+}
+.break-planet {
+  position: absolute;
+  object-fit: contain;
+  filter: drop-shadow(0 2px 8px rgba(0,0,0,0.35));
+}
+
+/* ── Break card ──────────────────────────────────────── */
+.break-card {
+  background: #0e1560;
+  border: 1px solid rgba(255,255,255,0.15);
+  border-radius: 20px;
+  padding: 28px 24px;
+  width: 280px;
+  position: relative;
+  z-index: 10;
+  box-shadow: 0 8px 40px rgba(0,0,0,0.5);
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+.break-card header { margin-bottom: 16px; }
+.break-card header h3 { font-size: 14px; font-weight: 700; margin: 0; }
+.badge.break {
+  background: #7fb8f5;
+  color: #0e1560;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  padding: 2px 8px;
+  border-radius: 99px;
+  margin-left: 6px;
+}
+
+/* ── Task reminder ───────────────────────────────────── */
+.break-task-reminder {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+.break-sun {
+  width: 42px;
+  height: 42px;
+  object-fit: contain;
+  filter: drop-shadow(0 0 10px rgba(245,197,24,0.5));
+  flex-shrink: 0;
+}
+.break-task-label {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  color: rgba(255,255,255,0.55);
+  margin: 0 0 2px;
+}
+.break-task-name {
+  font-size: 13px;
+  font-weight: 700;
+  color: #fff;
+  margin: 0;
+}
+
+/* ── Timer display ───────────────────────────────────── */
+.timer-display { margin-bottom: 20px; }
+.timer-display > p {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  color: rgba(255,255,255,0.7);
+  text-transform: uppercase;
+  margin: 0 0 6px;
+}
+.timer-digits {
+  background: #fff;
+  color: #111;
+  border-radius: 12px;
+  font-size: 30px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  padding: 12px 24px;
+  text-align: center;
+  margin: 0;
+  display: inline-block;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+/* ── Back to work button ─────────────────────────────── */
+.break-card .start-btn {
+  background: #F5C518;
+  color: #0e1560;
+  border: none;
+  border-radius: 12px;
+  font-weight: 800;
+  font-size: 15px;
+  letter-spacing: 0.08em;
+  cursor: pointer;
+  padding: 14px 0;
+  width: 100%;
+  transition: opacity 0.15s, transform 0.1s;
+  margin-top: 0;
+}
+.break-card .start-btn:hover { opacity: 0.9; transform: translateY(-1px); }
