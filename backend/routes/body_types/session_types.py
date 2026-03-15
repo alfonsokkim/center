@@ -1,8 +1,15 @@
 from pydantic import BaseModel
 
 class SessionStartData(BaseModel):
-    goal:str
+    goal: str
 
-class TabData(BaseModel):
-    url:str | None
-    duration:float
+class UrlData(BaseModel):
+    url: str
+    title: str = ""
+
+class TabTimeData(BaseModel):
+    url: str
+    duration: float
+
+class EndSessionData(BaseModel):
+    totalTimeElapsed: float | None = None

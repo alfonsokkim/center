@@ -43,13 +43,19 @@ def update_session(session_id: str, updates: UpdateSessionSchema) -> Optional[Se
 
 
 # Tab event
-# called during on_click
-def create_event(session_id: str, url: str) -> TabEvent:
+def create_event(
+    session_id: str,
+    url: str,
+    title: str,
+    relevance_score: float
+) -> TabEvent:
     db = SessionLocal()
     try:
         event = TabEvent(
             session_id=session_id,
             url=url,
+            title=title,
+            relevance_score=relevance_score,
         )
         db.add(event)
         db.commit()

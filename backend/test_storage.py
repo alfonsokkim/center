@@ -24,7 +24,9 @@ print("Updated session goal:", updated.goal)
 # test create event
 event = create_event(
     session_id=session.id,
-    url="reddit.com/r/gaming"
+    url="reddit.com/r/gaming",
+    title="reddit.com/r/gaming",
+    relevance_score=0.0,
 )
 print("Created event:", event.id, event.url)
 if not event.relevance_score:
