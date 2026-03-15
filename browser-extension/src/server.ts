@@ -9,21 +9,23 @@ export const postSessionGoal = async (goal: string) => {
     });
 
     if (!response.ok) throw new Error(`Goal sync failed: ${response.status}`);
-    return await response.json();
+    // This will return the JSON containing your new sessionId
+    return await response.json(); 
   } catch (err) {
     console.error("Backend Goal Error:", err);
     return null;
   }
 };
 
-export const postUrl = async (url: string) => {
+export const postUrl = async (url: string, title: string, sessionId: string) => {
   try {
-    const response = await fetch(`${BASE_URL}/session/start`, {
+    const response = await fetch(`${BASE_URL}/session/url`, {
       method: 'POST',
       headers: { 
-        'Content-Type': 'application/json' 
+        'Content-Type': 'application/json',
+        'sessionId': sessionId // INJECTED HEADER
       },
-      body: JSON.stringify({ url }),
+      body: JSON.stringify({ url, title }),
     });
 
     if (!response.ok) {
@@ -38,11 +40,14 @@ export const postUrl = async (url: string) => {
   }
 };
 
-export const sendTabTime = async (url: string, elapsedSeconds: number) => {
+export const sendTabTime = async (url: string, elapsedSeconds: number, sessionId: string) => {
   try {
-    const response = await fetch(`${BASE_URL}/session/tabtime`, { // Adjust endpoint as needed
+    const response = await fetch(`${BASE_URL}/session/tabtime`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 
+        'Content-Type': 'application/json',
+        'sessionId': sessionId // INJECTED HEADER
+      },
       body: JSON.stringify({ 
         url: url, 
         duration: elapsedSeconds 
@@ -57,11 +62,13 @@ export const sendTabTime = async (url: string, elapsedSeconds: number) => {
   }
 };
 
-export const postSessionEnd = async () => {
+export const postSessionEnd = async (sessionId: string) => {
   try {
-    // No headers, no body, just a simple POST ping to the endpoint
     const response = await fetch(`${BASE_URL}/session/end`, { 
-      method: 'POST' 
+      method: 'POST',
+      headers: {
+        'sessionId': sessionId // INJECTED HEADER
+      }
     });
 
     if (!response.ok) throw new Error(`End session sync failed: ${response.status}`);
@@ -71,4 +78,3 @@ export const postSessionEnd = async () => {
     return null;
   }
 };
-
