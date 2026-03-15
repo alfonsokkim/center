@@ -1,8 +1,11 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 from contextlib import asynccontextmanager
+
 from routes import score, session, analytics
 from db.database import init_db
+
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -31,6 +34,23 @@ app.add_middleware(
 app.include_router(score.router, prefix="/score")
 app.include_router(analytics.router, prefix="/analytics")
 app.include_router(session.router, prefix="/session")
+
+
+
+# exception handlers
+
+@app.exception_handler(ValueError)
+async def value_error_handler(request: Request, exc: ValueError):
+    return JSONResponse(status_code=400, content={"detail": str(exc)})
+
+@app.exception_handler(LookupError)
+async def lookup_error_handler(request: Request, exc: LookupError):
+    return JSONResponse(status_code=404, content={"detail": str(exc)})
+
+@app.exception_handler(Exception)
+async def general_error_handler(request: Request, exc: Exception):
+    return JSONResponse(status_code=500, content={"detail": "Internal server error"})
+
 
 
 @app.get("/")

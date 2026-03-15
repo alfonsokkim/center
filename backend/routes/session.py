@@ -6,11 +6,13 @@ async def start_session():
     # create storage for url duration
     return None
 
+
 @router.post("/resume")
 async def resume_session():
     # duration
     # logs duration paused
     return None
+
 
 @router.post("/end")
 async def end_session():
@@ -18,6 +20,8 @@ async def end_session():
     # logs duration and calculates final score
     return None
 
+# params:
+# sessionId - should be a url param
 @router.get("")
 async def get_stats():
     # get stats of current study session

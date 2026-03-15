@@ -59,6 +59,15 @@ def create_event(session_id: str, url: str) -> TabEvent:
         db.close()
 
 
+def get_event_from_url(url: str, session_id: str) -> Optional[TabEvent]:
+    db = SessionLocal()
+    try:
+        return db.query(TabEvent).filter(TabEvent.url == url, TabEvent.session_id == session_id).first()
+    finally:
+        db.close()
+
+
+
 # url and duration passed here
 # called during on_click
 def update_event(event_id: str, updates: UpdateTabEventSchema) -> Optional[TabEvent]:

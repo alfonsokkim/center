@@ -20,6 +20,7 @@ class TabEvent(Base):
     id = Column(String, primary_key=True, default=lambda: str(uuid.uuid4()))
     session_id = Column(String, ForeignKey("sessions.id"), nullable=False)
     url = Column(String, nullable=False)
+    title = Column(String, nullable=False)
     relevance_score = Column(Float, nullable=True)
     time_spent = Column(Float, default=0.0)
 
